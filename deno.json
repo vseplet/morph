@@ -2,6 +2,7 @@
   "lock": false,
   "name": "@vseplet/morph",
   "version": "0.0.0",
+  "license": "MIT",
   "workflows": {
     "UpdateSemverDeployJsr": {
       "versionsFilePath": "./versions.ts"
@@ -14,16 +15,9 @@
     ".": "./source/mod.ts"
   },
   "publish": {
-    "include": [
-      "./source/**",
-      "./README.md",
-      "./LICENSE"
-    ]
+    "include": ["./source/**", "./README.md", "./LICENSE"]
   },
   "fmt": {
-    "exclude": [
-      "./versions.ts",
-      "./deno.json"
-    ]
+    "exclude": ["./versions.ts", "./deno.json"]
   }
 }

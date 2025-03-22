@@ -48,15 +48,18 @@ export const render = async (
 
   meta = { ...template.meta };
 
-  const html = await template.str.reduce(async (accPromise, part, i) => {
-    const acc = await accPromise;
-    const { html: renderedArg, meta: argMeta } = await renderArgument(
-      template.args[i],
-      pageProps,
-    );
-    Object.assign(meta, argMeta);
-    return acc + part + renderedArg;
-  }, Promise.resolve(""));
+  const html = await template.str.reduce(
+    async (accPromise: any, part: any, i: any) => {
+      const acc = await accPromise;
+      const { html: renderedArg, meta: argMeta } = await renderArgument(
+        template.args[i],
+        pageProps,
+      );
+      Object.assign(meta, argMeta);
+      return acc + part + renderedArg;
+    },
+    Promise.resolve(""),
+  );
 
   return { html, meta };
 };
@@ -235,10 +238,6 @@ export const component = <T = {}>(
 };
 
 export const partial = <T = {}>() => {};
-
-export const island = <R extends IslandRpcDefinition, P = {}>(
-  _: Island<R, P>,
-): MorphTemplateAsyncGenerator<any> => morph.island(_);
 
 export const style = (text: string) => `style="${text}"`;
 
