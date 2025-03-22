@@ -35,20 +35,6 @@ export type MorphPageProps = MorphBaseProps & {
   query: Record<string, string>;
 };
 
-// export type MorphRequest = {
-//   api: string;
-//   route: string;
-//   params: { [x: string]: string };
-//   query: Record<string, string>;
-//   headers: Record<string, string>;
-//   formData: FormData;
-// };
-
-// export type MorphResponse = {
-//   html?: string;
-//   status?: number;
-// };
-
 export type Layout = {
   layout: (page: string, args: Partial<LayoutOptions>) => string;
   wrapper?: MorphTemplateGenerator<{ child: MorphTemplate } & MorphPageProps>;

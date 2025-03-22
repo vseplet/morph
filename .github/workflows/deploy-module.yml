@@ -3,11 +3,11 @@ on:
   push:
     branches: [main]
     paths:
-      - /source/**
+      - source/**
   pull_request:
     branches: [main]
     paths:
-      - /source/**
+      - source/**
 
 jobs:
   release:
