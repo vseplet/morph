@@ -1,14 +1,10 @@
 import { type Context, Hono } from "@hono/hono";
 
 import type {
-  Island,
-  IslandRpcCalls,
-  IslandRpcDefinition,
   Layout,
   LayoutOptions,
   MorphAsyncTemplate,
   MorphPageProps,
-  MorphResponse,
   MorphTemplate,
   MorphTemplateAsyncGenerator,
   MorphTemplateGenerator,
@@ -26,95 +22,82 @@ export const render = async (
     | Array<MorphTemplateGenerator<any> | MorphTemplateAsyncGenerator<any>>
     | any, // TODO: костыль
   pageProps: MorphPageProps,
-): Promise<string> => {
+): Promise<{ html: string; meta: {} }> => {
+  let meta: Record<string, any> = {};
+
   if (Array.isArray(template)) {
-    const renderedParts = await Promise.all(
+    const results = await Promise.all(
       template.map((item) => render(item, pageProps)),
     );
-    return renderedParts.join("");
+    return {
+      html: results.map((r) => r.html).join(""),
+      meta: Object.assign({}, ...results.map((r) => r.meta)),
+    };
   }
 
-  if (template?.isAsyncTemplateGenerator) {
-    return await render(
-      await template.generate({ ...template?.props, ...pageProps }),
+  if (template?.isAsyncTemplateGenerator || template?.isTemplateGenerator) {
+    return render(
+      await template.generate({ ...template.props, ...pageProps }),
       pageProps,
     );
   }
 
-  if (template?.isTemplateGenerator) {
-    return await render(
-      template.generate({ ...template?.props, ...pageProps }),
-      pageProps,
-    );
+  if (!template?.str || !Array.isArray(template.args)) {
+    return { html: String(template ?? ""), meta };
   }
 
-  // @ts-ignore
-  return await template.str.reduce(async (accPromise, part, i) => {
+  meta = { ...template.meta };
+
+  const html = await template.str.reduce(async (accPromise, part, i) => {
     const acc = await accPromise;
-    const arg = template.args[i];
-
-    if (arg?.isTemplate) {
-      return acc + part + (await render(arg, pageProps));
-    }
-
-    if (arg?.isAsyncTemplateGenerator) {
-      return (
-        acc +
-        part +
-        (await render(
-          await arg.generate({ ...arg.props, ...pageProps }),
-          pageProps,
-        ))
-      );
-    }
-
-    if (arg?.isTemplateGenerator) {
-      return (
-        acc +
-        part +
-        (await render(arg.generate({ ...arg.props, ...pageProps }), pageProps))
-      );
-    }
-
-    if (typeof arg === "function" && arg.constructor.name === "AsyncFunction") {
-      return acc + part + (await render(await arg(pageProps), pageProps));
-    }
-
-    if (typeof arg === "function" && arg.constructor.name === "Function") {
-      const res = arg(pageProps);
-
-      if (res?.isAsyncTemplateGenerator) {
-        return (
-          acc +
-          part +
-          (await render(
-            await res.generate({ ...res.props, ...pageProps }),
-            pageProps,
-          ))
-        );
-      } else if (res?.isTemplateGenerator) {
-        return (
-          acc +
-          part +
-          (await render(
-            res.generate({ ...res.props, ...pageProps }),
-            pageProps,
-          ))
-        );
-      } else {
-        return acc + part + (await render(res, pageProps));
-      }
-    }
-
-    if (Array.isArray(arg)) {
-      const renderedArray = await Promise.all(
-        arg.map((item) => render(item, pageProps)),
-      );
-      return acc + part + renderedArray.join("");
-    }
-
-    return acc + part + (arg || "");
+    const { html: renderedArg, meta: argMeta } = await renderArgument(
+      template.args[i],
+      pageProps,
+    );
+    Object.assign(meta, argMeta);
+    return acc + part + renderedArg;
   }, Promise.resolve(""));
+
+  return { html, meta };
+};
+
+const renderArgument = async (
+  arg: any,
+  pageProps: MorphPageProps,
+): Promise<{ html: string; meta: {} }> => {
+  let meta: Record<string, any> = {};
+  if (!arg) return { html: "", meta };
+
+  if (arg.isTemplate) {
+    const result = await render(arg, pageProps);
+    return result;
+  }
+
+  if (arg.isAsyncTemplateGenerator || arg.isTemplateGenerator) {
+    return render(
+      await arg.generate({ ...arg.props, ...pageProps }),
+      pageProps,
+    );
+  }
+
+  if (typeof arg === "function") {
+    const result = await (arg.constructor.name === "AsyncFunction"
+      ? arg(pageProps)
+      : Promise.resolve(arg(pageProps)));
+    return renderArgument(result, pageProps);
+  }
+
+  if (Array.isArray(arg)) {
+    const results = await Promise.all(
+      arg.map((item) => render(item, pageProps)),
+    );
+    return {
+      html: results.map((r) => r.html).join(""),
+      meta: Object.assign({}, ...results.map((r) => r.meta)),
+    };
+  }
+
+  return { html: String(arg), meta };
 };
 
 export class Morph {
@@ -122,9 +105,6 @@ export class Morph {
   private pages: Record<string, any> = {};
   private partials: Record<string, any> = {};
   private honoRouter: Hono | null = null;
-
-  private islandsCount = 0;
-  private routesCount = 0;
 
   constructor(
     private options: {
@@ -151,33 +131,19 @@ export class Morph {
 
       const template = generate(pageProps);
 
-      const html = this.morphLayout.wrapper
+      const pageObject = this.morphLayout.wrapper
         ? await render(
             this.morphLayout?.wrapper({ child: template, ...pageProps }),
             pageProps,
           )
         : await render(template, pageProps);
 
-      return c.html(this.morphLayout.layout(html));
+      console.log(pageObject.meta);
+
+      return c.html(this.morphLayout.layout(pageObject.html, pageObject.meta));
     };
 
     return this;
-  }
-
-  island<R, P>(body: Island<R, P>) {
-    const rpc: IslandRpcCalls<any> = { hx: {} };
-    return (props: P) =>
-      body.template({
-        rpc,
-        props,
-        // api: `/api/${name}`,
-        // rest: {
-        //   hx: (islandName, method, route: string) =>
-        //     islandName === "self"
-        //       ? `hx-${method}='/api/${name}${route}'`
-        //       : `hx-${method}='/api/${islandName}${route}'`,
-        // },
-      });
   }
 
   hono() {
@@ -296,7 +262,7 @@ export const basic = layout<{
 }>((options) => {
   return {
     wrapper: options?.wrapper,
-    layout: (page: string) => {
+    layout: (page: string, args) => {
       return `
         <html>
           <head>
@@ -338,7 +304,7 @@ export const basic = layout<{
                 ? `<script src="https://unpkg.com/hyperscript.org@0.9.12"></script>`
                 : ""
             }
-            <title>${options.title || "Reface Clean"}</title>
+            <title>${args.title || options.title || "Reface Clean"}</title>
             ${options.head || ""}
           </head>
           <body>
@@ -351,24 +317,3 @@ export const basic = layout<{
     },
   };
 });
-
-export const RESPONSE = async (
-  html?: any,
-  status?: number,
-  pageProps?: MorphPageProps,
-): Promise<MorphResponse> => {
-  if (
-    (html && typeof html === "object" && "isTemplate" in html) ||
-    Array.isArray(html)
-  ) {
-    return {
-      html: await render(html, {} as any),
-      status,
-    };
-  }
-
-  return {
-    html: typeof html === "string" ? html : undefined,
-    status,
-  };
-};
