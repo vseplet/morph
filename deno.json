@@ -1,0 +1,22 @@
+{
+  "lock": false,
+  "name": "@vseplet/morph",
+  "version": "0.0.0",
+  "workflows": {
+    "UpdateSemverDeployJsr": {
+      "versionsFilePath": "./versions.ts"
+    }
+  },
+  "imports": {
+    "@hono/hono": "jsr:@hono/hono@4.6.15"
+  },
+  "exports": {
+    ".": "./source/mod.ts"
+  },
+  "publish": {
+    "include": ["./source/**", "./README.md", "./LICENSE"]
+  },
+  "fmt": {
+    "exclude": ["./versions.ts", "./deno.json"]
+  }
+}

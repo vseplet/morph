@@ -1,0 +1,36 @@
+name: Deploy Module
+on:
+  push:
+    branches: [main]
+    paths:
+      - /source/**
+  pull_request:
+    branches: [main]
+    paths:
+      - /source/**
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v3
+
+      - name: Install Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Update version
+        env:
+          GITHUB_TOKEN: ${{ secrets.SHIBUI_GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          deno run --allow-all --unstable-broadcast-channel --unstable-kv https://deno.land/x/automation_scripts@0.0.6/ci-cd/scripts/UpdateSemverDeployJsr.ts

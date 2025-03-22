@@ -1,0 +1,374 @@
+import { type Context, Hono } from "@hono/hono";
+
+import type {
+  Island,
+  IslandRpcCalls,
+  IslandRpcDefinition,
+  Layout,
+  LayoutOptions,
+  MorphAsyncTemplate,
+  MorphPageProps,
+  MorphResponse,
+  MorphTemplate,
+  MorphTemplateAsyncGenerator,
+  MorphTemplateGenerator,
+} from "./types.ts";
+
+export * from "./types.ts";
+
+export const render = async (
+  template:
+    | MorphTemplate
+    | MorphAsyncTemplate<any>
+    | Array<MorphTemplate | MorphAsyncTemplate<any>>
+    | MorphTemplateGenerator<any>
+    | MorphTemplateAsyncGenerator<any>
+    | Array<MorphTemplateGenerator<any> | MorphTemplateAsyncGenerator<any>>
+    | any, // TODO: костыль
+  pageProps: MorphPageProps,
+): Promise<string> => {
+  if (Array.isArray(template)) {
+    const renderedParts = await Promise.all(
+      template.map((item) => render(item, pageProps)),
+    );
+    return renderedParts.join("");
+  }
+
+  if (template?.isAsyncTemplateGenerator) {
+    return await render(
+      await template.generate({ ...template?.props, ...pageProps }),
+      pageProps,
+    );
+  }
+
+  if (template?.isTemplateGenerator) {
+    return await render(
+      template.generate({ ...template?.props, ...pageProps }),
+      pageProps,
+    );
+  }
+
+  // @ts-ignore
+  return await template.str.reduce(async (accPromise, part, i) => {
+    const acc = await accPromise;
+    const arg = template.args[i];
+
+    if (arg?.isTemplate) {
+      return acc + part + (await render(arg, pageProps));
+    }
+
+    if (arg?.isAsyncTemplateGenerator) {
+      return (
+        acc +
+        part +
+        (await render(
+          await arg.generate({ ...arg.props, ...pageProps }),
+          pageProps,
+        ))
+      );
+    }
+
+    if (arg?.isTemplateGenerator) {
+      return (
+        acc +
+        part +
+        (await render(arg.generate({ ...arg.props, ...pageProps }), pageProps))
+      );
+    }
+
+    if (typeof arg === "function" && arg.constructor.name === "AsyncFunction") {
+      return acc + part + (await render(await arg(pageProps), pageProps));
+    }
+
+    if (typeof arg === "function" && arg.constructor.name === "Function") {
+      const res = arg(pageProps);
+
+      if (res?.isAsyncTemplateGenerator) {
+        return (
+          acc +
+          part +
+          (await render(
+            await res.generate({ ...res.props, ...pageProps }),
+            pageProps,
+          ))
+        );
+      } else if (res?.isTemplateGenerator) {
+        return (
+          acc +
+          part +
+          (await render(
+            res.generate({ ...res.props, ...pageProps }),
+            pageProps,
+          ))
+        );
+      } else {
+        return acc + part + (await render(res, pageProps));
+      }
+    }
+
+    if (Array.isArray(arg)) {
+      const renderedArray = await Promise.all(
+        arg.map((item) => render(item, pageProps)),
+      );
+      return acc + part + renderedArray.join("");
+    }
+
+    return acc + part + (arg || "");
+  }, Promise.resolve(""));
+};
+
+export class Morph {
+  private morphLayout: Layout;
+  private pages: Record<string, any> = {};
+  private partials: Record<string, any> = {};
+  private honoRouter: Hono | null = null;
+
+  private islandsCount = 0;
+  private routesCount = 0;
+
+  constructor(
+    private options: {
+      layout: Layout;
+    },
+  ) {
+    this.morphLayout = options.layout;
+  }
+
+  layout(layout: Layout) {
+    this.morphLayout = layout;
+    return this;
+  }
+
+  page(route: string, generate: any) {
+    this.pages[route] = async (c: Context) => {
+      const pageProps = {
+        request: c.req.raw,
+        route,
+        params: c.req.param(),
+        query: c.req.query(),
+        headers: c.req.header(),
+      };
+
+      const template = generate(pageProps);
+
+      const html = this.morphLayout.wrapper
+        ? await render(
+            this.morphLayout?.wrapper({ child: template, ...pageProps }),
+            pageProps,
+          )
+        : await render(template, pageProps);
+
+      return c.html(this.morphLayout.layout(html));
+    };
+
+    return this;
+  }
+
+  island<R, P>(body: Island<R, P>) {
+    const rpc: IslandRpcCalls<any> = { hx: {} };
+    return (props: P) =>
+      body.template({
+        rpc,
+        props,
+        // api: `/api/${name}`,
+        // rest: {
+        //   hx: (islandName, method, route: string) =>
+        //     islandName === "self"
+        //       ? `hx-${method}='/api/${name}${route}'`
+        //       : `hx-${method}='/api/${islandName}${route}'`,
+        // },
+      });
+  }
+
+  hono() {
+    if (this.honoRouter == null) {
+      const router = new Hono();
+
+      for (const [route, handler] of Object.entries(this.pages)) {
+        router.get(route, handler);
+      }
+
+      for (const [route, handler] of Object.entries(this.partials)) {
+        router.get(route, handler);
+      }
+
+      return router;
+    } else {
+      return this.honoRouter;
+    }
+  }
+
+  async fetch(req: Request) {
+    return await this.hono().fetch(req);
+  }
+}
+
+export const html = (
+  str: TemplateStringsArray,
+  ...args: any[]
+): MorphTemplate => ({
+  isTemplate: true,
+  type: "html",
+  str,
+  args,
+});
+
+export const css = (str: TemplateStringsArray, ...args: any[]) => ({
+  isTemplate: true,
+  type: "css",
+  str,
+  args,
+});
+
+export const morph = new Morph({
+  layout: {
+    layout: (page) => `
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <script src="https://unpkg.com/htmx.org@2.0.1"></script>
+          <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+        </head>
+        <body>
+          ${page}
+        </body>
+      </html>
+    `,
+  },
+});
+
+export const layout = <C>(cb: (layoutOptions: C & LayoutOptions) => Layout) =>
+  cb;
+
+export const component = <T = {}>(
+  generate: T extends void
+    ? (props: MorphPageProps) => Promise<MorphTemplate> | MorphTemplate
+    : (props: T & MorphPageProps) => Promise<MorphTemplate> | MorphTemplate,
+  slots?: any,
+) => {
+  if (generate.constructor.name === "AsyncFunction") {
+    return (props: T) => {
+      return {
+        isAsyncTemplateGenerator: true,
+        generate,
+        props,
+        slots,
+      };
+    };
+  } else {
+    return (props: T) => {
+      return {
+        isTemplateGenerator: true,
+        generate,
+        props,
+        slots,
+      };
+    };
+  }
+};
+
+export const partial = <T = {}>() => {};
+
+export const island = <R extends IslandRpcDefinition, P = {}>(
+  _: Island<R, P>,
+): MorphTemplateAsyncGenerator<any> => morph.island(_);
+
+export const style = (text: string) => `style="${text}"`;
+
+export const onclick = (fn: Function) => {
+  return `onclick='(${fn.toString()})()'`;
+};
+
+export const script = (fn: Function) => {
+  return `<script>(${fn.toString()})()</script>`;
+};
+
+export const basic = layout<{
+  hyperscript?: boolean;
+  alpine?: boolean;
+  bootstrap?: boolean;
+  bootstrapIcons?: boolean;
+  htmx?: boolean;
+  jsonEnc?: boolean;
+  bluma?: boolean;
+  wrapper?: MorphTemplateGenerator<{ child: MorphTemplate } & MorphPageProps>;
+}>((options) => {
+  return {
+    wrapper: options?.wrapper,
+    layout: (page: string) => {
+      return `
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            ${
+              options.htmx
+                ? `<script src="https://unpkg.com/htmx.org@2.0.1"></script>`
+                : ""
+            }
+            ${
+              options.alpine
+                ? `<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>`
+                : ""
+            }
+            ${
+              options.bootstrap
+                ? `<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">`
+                : ""
+            }
+            ${
+              options.bootstrapIcons
+                ? `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">`
+                : ""
+            }
+            ${
+              options.jsonEnc
+                ? `<script src="https://unpkg.com/htmx-ext-json-enc@2.0.1/json-enc.js"></script>`
+                : ""
+            }
+            ${
+              options.bluma
+                ? `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">`
+                : ""
+            }
+            ${
+              options.hyperscript
+                ? `<script src="https://unpkg.com/hyperscript.org@0.9.12"></script>`
+                : ""
+            }
+            <title>${options.title || "Reface Clean"}</title>
+            ${options.head || ""}
+          </head>
+          <body>
+            ${options.bodyStart || ""}
+            ${page}
+            ${options.bodyEnd || ""}
+          </body>
+        </html>
+      `;
+    },
+  };
+});
+
+export const RESPONSE = async (
+  html?: any,
+  status?: number,
+  pageProps?: MorphPageProps,
+): Promise<MorphResponse> => {
+  if (
+    (html && typeof html === "object" && "isTemplate" in html) ||
+    Array.isArray(html)
+  ) {
+    return {
+      html: await render(html, {} as any),
+      status,
+    };
+  }
+
+  return {
+    html: typeof html === "string" ? html : undefined,
+    status,
+  };
+};
