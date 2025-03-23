@@ -256,7 +256,8 @@ export const component = <T = {}>(
   }
 };
 
-export const style = (text: string) => `style="${text}"`;
+export const style = (str: TemplateStringsArray, ...args: any[]) =>
+  `class="${styled(str, args)}"`;
 
 export const onclick = (fn: Function) => {
   return `onclick='(${fn.toString()})()'`;
