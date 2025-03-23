@@ -23,6 +23,6 @@
     "exclude": ["./versions.ts", "./deno.json"]
   },
   "test": {
-    "include": ["./tests/*.ts"]
+    "include": ["./tests/**/*.ts"]
   }
 }

@@ -136,9 +136,9 @@ export class Morph {
 
       const pageObject = this.morphLayout.wrapper
         ? await render(
-            this.morphLayout?.wrapper({ child: template, ...pageProps }),
-            pageProps,
-          )
+          this.morphLayout?.wrapper({ child: template, ...pageProps }),
+          pageProps,
+        )
         : await render(template, pageProps);
 
       console.log(pageObject.meta);
@@ -268,41 +268,41 @@ export const basic = layout<{
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             ${
-              options.htmx
-                ? `<script src="https://unpkg.com/htmx.org@2.0.1"></script>`
-                : ""
-            }
+        options.htmx
+          ? `<script src="https://unpkg.com/htmx.org@2.0.1"></script>`
+          : ""
+      }
             ${
-              options.alpine
-                ? `<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>`
-                : ""
-            }
+        options.alpine
+          ? `<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>`
+          : ""
+      }
             ${
-              options.bootstrap
-                ? `<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        options.bootstrap
+          ? `<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
       integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">`
-                : ""
-            }
+          : ""
+      }
             ${
-              options.bootstrapIcons
-                ? `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">`
-                : ""
-            }
+        options.bootstrapIcons
+          ? `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">`
+          : ""
+      }
             ${
-              options.jsonEnc
-                ? `<script src="https://unpkg.com/htmx-ext-json-enc@2.0.1/json-enc.js"></script>`
-                : ""
-            }
+        options.jsonEnc
+          ? `<script src="https://unpkg.com/htmx-ext-json-enc@2.0.1/json-enc.js"></script>`
+          : ""
+      }
             ${
-              options.bluma
-                ? `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">`
-                : ""
-            }
+        options.bluma
+          ? `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">`
+          : ""
+      }
             ${
-              options.hyperscript
-                ? `<script src="https://unpkg.com/hyperscript.org@0.9.12"></script>`
-                : ""
-            }
+        options.hyperscript
+          ? `<script src="https://unpkg.com/hyperscript.org@0.9.12"></script>`
+          : ""
+      }
             <title>${args.title || options.title || "Reface Clean"}</title>
             ${options.head || ""}
           </head>

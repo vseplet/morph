@@ -13,8 +13,7 @@ export type MorphAsyncTemplate<P> = {
   props: P & MorphPageProps;
 };
 
-export type MorphTemplateGenerator<T> = T extends void
-  ? () => MorphTemplate
+export type MorphTemplateGenerator<T> = T extends void ? () => MorphTemplate
   : (props: T) => MorphTemplate;
 
 export type MorphTemplateAsyncGenerator<T> = T extends void
