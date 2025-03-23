@@ -2,12 +2,12 @@ import { assertEquals } from "@std/assert";
 import { component, html } from "@vseplet/morph";
 import { renderWithEmptyRequest } from "$/tests/helpers";
 
-Deno.test("0 Render sync component", async () => {
+Deno.test("2 Render sync component with async function", async () => {
   const cmp = component(
     () =>
       html`
       <div>
-        <p>Hello, World</p>
+        ${async () => (html`<p>Hello, World</p>`)}
       </div>
     `,
   );

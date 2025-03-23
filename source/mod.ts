@@ -9,9 +9,9 @@ import type {
   MorphTemplateAsyncGenerator,
   MorphTemplateGenerator,
 } from "./types.ts";
+import { buildString } from "./helpers.ts";
 
 export * from "./types.ts";
-
 export const render = async (
   template:
     | MorphTemplate
@@ -22,8 +22,9 @@ export const render = async (
     | Array<MorphTemplateGenerator<any> | MorphTemplateAsyncGenerator<any>>
     | any, // TODO: костыль
   pageProps: MorphPageProps,
-): Promise<{ html: string; meta: {} }> => {
+): Promise<{ html: string; css: string; meta: {} }> => {
   let meta: Record<string, any> = {};
+  let css = "";
 
   if (Array.isArray(template)) {
     const results = await Promise.all(
@@ -31,6 +32,7 @@ export const render = async (
     );
     return {
       html: results.map((r) => r.html).join(""),
+      css: results.map((r) => r.css).join(""),
       meta: Object.assign({}, ...results.map((r) => r.meta)),
     };
   }
@@ -43,7 +45,7 @@ export const render = async (
   }
 
   if (!template?.str || !Array.isArray(template.args)) {
-    return { html: String(template ?? ""), meta };
+    return { html: String(template ?? ""), css: "", meta };
   }
 
   meta = { ...template.meta };
@@ -51,25 +53,28 @@ export const render = async (
   const html = await template.str.reduce(
     async (accPromise: any, part: any, i: any) => {
       const acc = await accPromise;
-      const { html: renderedArg, meta: argMeta } = await renderArgument(
-        template.args[i],
-        pageProps,
-      );
+      const { html: renderedArg, css: argCss, meta: argMeta } =
+        await renderArgument(template.args[i], pageProps);
       Object.assign(meta, argMeta);
+      css += argCss;
       return acc + part + renderedArg;
     },
     Promise.resolve(""),
   );
 
-  return { html, meta };
+  return { html, css, meta };
 };
 
 const renderArgument = async (
   arg: any,
   pageProps: MorphPageProps,
-): Promise<{ html: string; meta: {} }> => {
+): Promise<{ html: string; css: string; meta: {} }> => {
   let meta: Record<string, any> = {};
-  if (!arg) return { html: "", meta };
+  let css = "";
+  if (!arg) return { html: "", css: "", meta };
+
+  if (arg.isMeta) return { html: "", css: "", meta: arg.meta };
+  if (arg.isCSS) return { html: arg.name, css: arg.str, meta };
 
   if (arg.isTemplate) {
     const result = await render(arg, pageProps);
@@ -96,11 +101,12 @@ const renderArgument = async (
     );
     return {
       html: results.map((r) => r.html).join(""),
+      css: results.map((r) => r.css).join(""),
       meta: Object.assign({}, ...results.map((r) => r.meta)),
     };
   }
 
-  return { html: String(arg), meta };
+  return { html: String(arg), css: "", meta };
 };
 
 export class Morph {
@@ -141,9 +147,13 @@ export class Morph {
         )
         : await render(template, pageProps);
 
-      console.log(pageObject.meta);
-
-      return c.html(this.morphLayout.layout(pageObject.html, pageObject.meta));
+      return c.html(
+        this.morphLayout.layout(
+          pageObject.html,
+          pageObject.css,
+          pageObject.meta,
+        ),
+      );
     };
 
     return this;
@@ -182,11 +192,20 @@ export const html = (
   args,
 });
 
-export const css = (str: TemplateStringsArray, ...args: any[]) => ({
-  isTemplate: true,
-  type: "css",
-  str,
-  args,
+export const styled = (str: TemplateStringsArray, ...args: any[]) => {
+  const name = crypto.randomUUID();
+  return {
+    isCSS: true,
+    type: "css",
+    name,
+    str: `.${name}{${buildString(str, args)}}`,
+  };
+};
+
+export const meta = (data: {}) => ({
+  isMeta: true,
+  type: "meta",
+  meta: data,
 });
 
 export const morph = new Morph({
@@ -237,8 +256,6 @@ export const component = <T = {}>(
   }
 };
 
-export const partial = <T = {}>() => {};
-
 export const style = (text: string) => `style="${text}"`;
 
 export const onclick = (fn: Function) => {
@@ -261,7 +278,7 @@ export const basic = layout<{
 }>((options) => {
   return {
     wrapper: options?.wrapper,
-    layout: (page: string, args) => {
+    layout: (page: string, css: string, meta: Partial<LayoutOptions>) => {
       return `
         <html>
           <head>
@@ -303,8 +320,11 @@ export const basic = layout<{
           ? `<script src="https://unpkg.com/hyperscript.org@0.9.12"></script>`
           : ""
       }
-            <title>${args.title || options.title || "Reface Clean"}</title>
+            <title>${meta.title || options.title || "Reface Clean"}</title>
             ${options.head || ""}
+            <style>
+              ${css}
+            </style>
           </head>
           <body>
             ${options.bodyStart || ""}

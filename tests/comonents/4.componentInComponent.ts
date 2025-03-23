@@ -2,7 +2,7 @@ import { assertEquals } from "@std/assert";
 import { component, html } from "@vseplet/morph";
 import { renderWithEmptyRequest } from "$/tests/helpers";
 
-Deno.test("0 Render sync component", async () => {
+Deno.test("4 Render component in component", async () => {
   const cmp = component(
     () =>
       html`
