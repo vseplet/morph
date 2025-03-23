@@ -193,7 +193,7 @@ export const html = (
 });
 
 export const styled = (str: TemplateStringsArray, ...args: any[]) => {
-  const name = crypto.randomUUID();
+  const name = "s" + crypto.randomUUID();
   return {
     isCSS: true,
     type: "css",
