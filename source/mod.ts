@@ -323,6 +323,7 @@ export const basic = layout<{
       }
             <title>${meta.title || options.title || "Reface Clean"}</title>
             ${options.head || ""}
+            ${meta.head || ""}
             <style>
               ${css}
             </style>
