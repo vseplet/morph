@@ -42,6 +42,7 @@ Deno.test("0 Render styled component", async () => {
       "      background-color: #0056b3;\n" +
       "    }\n" +
       "  }",
+    js: "",
     meta: {},
   });
 });

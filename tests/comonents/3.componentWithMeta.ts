@@ -22,6 +22,7 @@ Deno.test("3 Render component with meta information", async () => {
       "        \n" +
       "      ",
     css: "",
+    js: "",
     meta: { head: "<meta>lol</meta>", title: "Hello, World!" },
   });
 });

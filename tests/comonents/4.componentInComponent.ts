@@ -15,6 +15,7 @@ Deno.test("4 Render component in component", async () => {
   assertEquals(await renderWithEmptyRequest(cmp), {
     html: "\n      <div>\n        <p>Hello, World</p>\n      </div>\n    ",
     css: "",
+    js: "",
     meta: {},
   });
 });

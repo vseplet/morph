@@ -12,6 +12,7 @@ import type {
 import { buildString } from "./helpers.ts";
 
 export * from "./types.ts";
+
 export const render = async (
   template:
     | MorphTemplate
@@ -20,19 +21,19 @@ export const render = async (
     | MorphTemplateGenerator<any>
     | MorphTemplateAsyncGenerator<any>
     | Array<MorphTemplateGenerator<any> | MorphTemplateAsyncGenerator<any>>
-    | any, // TODO: костыль
+    | any,
   pageProps: MorphPageProps,
-): Promise<{ html: string; css: string; meta: {} }> => {
+): Promise<{ html: string; css: string; js: string; meta: {} }> => {
   let meta: Record<string, any> = {};
   let css = "";
+  let js = "";
 
   if (Array.isArray(template)) {
-    const results = await Promise.all(
-      template.map((item) => render(item, pageProps)),
-    );
+    const results = await Promise.all(template.map((item) => render(item, pageProps)));
     return {
       html: results.map((r) => r.html).join(""),
       css: results.map((r) => r.css).join(""),
+      js: results.map((r) => r.js).join(""),
       meta: Object.assign({}, ...results.map((r) => r.meta)),
     };
   }
@@ -45,7 +46,7 @@ export const render = async (
   }
 
   if (!template?.str || !Array.isArray(template.args)) {
-    return { html: String(template ?? ""), css: "", meta };
+    return { html: String(template ?? ""), css: "", js: "", meta };
   }
 
   meta = { ...template.meta };
@@ -53,32 +54,35 @@ export const render = async (
   const html = await template.str.reduce(
     async (accPromise: any, part: any, i: any) => {
       const acc = await accPromise;
-      const { html: renderedArg, css: argCss, meta: argMeta } =
+      const { html: renderedArg, css: argCss, js: argJs, meta: argMeta } =
         await renderArgument(template.args[i], pageProps);
       Object.assign(meta, argMeta);
       css += argCss;
+      js += argJs;
       return acc + part + renderedArg;
     },
     Promise.resolve(""),
   );
 
-  return { html, css, meta };
+  return { html, css, js, meta };
 };
 
 const renderArgument = async (
   arg: any,
   pageProps: MorphPageProps,
-): Promise<{ html: string; css: string; meta: {} }> => {
-  let meta: Record<string, any> = {};
-  let css = "";
-  if (!arg) return { html: "", css: "", meta };
+): Promise<{ html: string; css: string; js: string; meta: {} }> => {
+  const meta: Record<string, any> = {};
+  const css = "";
+  const js = "";
 
-  if (arg.isMeta) return { html: "", css: "", meta: arg.meta };
-  if (arg.isCSS) return { html: arg.name, css: arg.str, meta };
+  if (!arg) return { html: "", css, js, meta };
+
+  if (arg.isMeta) return { html: "", css, js, meta: arg.meta };
+  if (arg.isCSS) return { html: arg.name, css: arg.str, js, meta };
+  if (arg.isJS) return { html: "", css, js: arg.str, meta };
 
   if (arg.isTemplate) {
-    const result = await render(arg, pageProps);
-    return result;
+    return render(arg, pageProps);
   }
 
   if (arg.isAsyncTemplateGenerator || arg.isTemplateGenerator) {
@@ -96,17 +100,16 @@ const renderArgument = async (
   }
 
   if (Array.isArray(arg)) {
-    const results = await Promise.all(
-      arg.map((item) => render(item, pageProps)),
-    );
+    const results = await Promise.all(arg.map((item) => render(item, pageProps)));
     return {
       html: results.map((r) => r.html).join(""),
       css: results.map((r) => r.css).join(""),
+      js: results.map((r) => r.js).join(""),
       meta: Object.assign({}, ...results.map((r) => r.meta)),
     };
   }
 
-  return { html: String(arg), css: "", meta };
+  return { html: String(arg), css, js, meta };
 };
 
 export class Morph {
@@ -141,16 +144,14 @@ export class Morph {
       const template = generate(pageProps);
 
       const pageObject = this.morphLayout.wrapper
-        ? await render(
-          this.morphLayout?.wrapper({ child: template, ...pageProps }),
-          pageProps,
-        )
+        ? await render(this.morphLayout?.wrapper({ child: template, ...pageProps }), pageProps)
         : await render(template, pageProps);
 
       return c.html(
         this.morphLayout.layout(
           pageObject.html,
           pageObject.css,
+          pageObject.js,
           pageObject.meta,
         ),
       );
@@ -206,6 +207,12 @@ export const meta = (data: {}) => ({
   isMeta: true,
   type: "meta",
   meta: data,
+});
+
+export const js = (str: TemplateStringsArray, ...args: any[]) => ({
+  isJS: true,
+  type: "js",
+  str: `(function() {${buildString(str, args)}})();`,
 });
 
 export const morph = new Morph({
@@ -267,6 +274,7 @@ export const script = (fn: Function) => {
   return `<script>(${fn.toString()})()</script>`;
 };
 
+// deno-fmt-ignore
 export const basic = layout<{
   hyperscript?: boolean;
   alpine?: boolean;
@@ -279,48 +287,48 @@ export const basic = layout<{
 }>((options) => {
   return {
     wrapper: options?.wrapper,
-    layout: (page: string, css: string, meta: Partial<LayoutOptions>) => {
+    layout: (page: string, css: string, js: string, meta: Partial<LayoutOptions>) => {
       return `
         <html>
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             ${
-        options.htmx
-          ? `<script src="https://unpkg.com/htmx.org@2.0.1"></script>`
-          : ""
-      }
+              options.htmx
+                ? `<script src="https://unpkg.com/htmx.org@2.0.1"></script>`
+                : ""
+            }
             ${
-        options.alpine
-          ? `<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>`
-          : ""
-      }
+              options.alpine
+                ? `<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>`
+                : ""
+            }
             ${
-        options.bootstrap
-          ? `<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">`
-          : ""
-      }
+              options.bootstrap
+                ? `<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+            integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">`
+                : ""
+            }
             ${
-        options.bootstrapIcons
-          ? `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">`
-          : ""
-      }
+              options.bootstrapIcons
+                ? `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">`
+                : ""
+            }
             ${
-        options.jsonEnc
-          ? `<script src="https://unpkg.com/htmx-ext-json-enc@2.0.1/json-enc.js"></script>`
-          : ""
-      }
+              options.jsonEnc
+                ? `<script src="https://unpkg.com/htmx-ext-json-enc@2.0.1/json-enc.js"></script>`
+                : ""
+            }
             ${
-        options.bluma
-          ? `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">`
-          : ""
-      }
+              options.bluma
+                ? `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">`
+                : ""
+            }
             ${
-        options.hyperscript
-          ? `<script src="https://unpkg.com/hyperscript.org@0.9.12"></script>`
-          : ""
-      }
+              options.hyperscript
+                ? `<script src="https://unpkg.com/hyperscript.org@0.9.12"></script>`
+                : ""
+            }
             <title>${meta.title || options.title || "Reface Clean"}</title>
             ${options.head || ""}
             ${meta.head || ""}
@@ -332,6 +340,7 @@ export const basic = layout<{
             ${options.bodyStart || ""}
             ${page}
             ${options.bodyEnd || ""}
+            ${js}
           </body>
         </html>
       `;
