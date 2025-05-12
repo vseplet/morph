@@ -6,13 +6,12 @@ Deno.test("7 Render component with JavaScript", async () => {
   const cmp = component(
     () =>
       html`
-      <div>
-        <p id="title">Hello, World</p>
-        ${js`document.querySelector('#title').innerHTML = 'LoL';`}
-      </div>
-    `,
+        <div>
+          <p id="title">Hello, World</p>
+          ${js`document.querySelector('#title').innerHTML = 'LoL';`}
+        </div>
+      `,
   );
-
 
   assertEquals(await renderWithEmptyRequest(cmp), {
     html: "\n" +
@@ -23,6 +22,6 @@ Deno.test("7 Render component with JavaScript", async () => {
       "    ",
     css: "",
     js: "(function() {document.querySelector('#title').innerHTML = 'LoL';})();",
-    meta: {}
+    meta: {},
   });
 });

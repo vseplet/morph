@@ -1,15 +1,26 @@
 import { Hono } from "@hono/hono";
-import { morph, component, html, js } from "@vseplet/morph";
+import { component, fn, html, meta, morph, styled } from "@vseplet/morph";
 
-const app = new Hono();
+Deno.serve(
+  new Hono()
+    .all("/*", async (c) =>
+      // deno-fmt-ignore
+      await morph.page("/", component(async () => html`
+        ${meta({
+          title: "Hello, World!"
+        })}
 
-morph.page("/", component(async () => html`
-  ${await Deno.readTextFile("./deno.json")}
-  <h1>Hello, World!</h1>
-  ${js`
-    console.log("Hello, World!")
-  `}
-`))
+        <h1>Hello, World!</h1>
 
-app.all('/*', async (c) => await morph.fetch(c.req.raw))
-Deno.serve(app.fetch);
+        <div class="${styled`
+          color: red;
+        `}">
+          ${await Deno.readTextFile("./deno.json")}
+        <div>
+
+        ${fn(() => {
+          console.log('Hello!')
+        })}
+      `)).fetch(c.req.raw)
+    ).fetch,
+);

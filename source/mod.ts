@@ -29,7 +29,9 @@ export const render = async (
   let js = "";
 
   if (Array.isArray(template)) {
-    const results = await Promise.all(template.map((item) => render(item, pageProps)));
+    const results = await Promise.all(
+      template.map((item) => render(item, pageProps)),
+    );
     return {
       html: results.map((r) => r.html).join(""),
       css: results.map((r) => r.css).join(""),
@@ -100,7 +102,9 @@ const renderArgument = async (
   }
 
   if (Array.isArray(arg)) {
-    const results = await Promise.all(arg.map((item) => render(item, pageProps)));
+    const results = await Promise.all(
+      arg.map((item) => render(item, pageProps)),
+    );
     return {
       html: results.map((r) => r.html).join(""),
       css: results.map((r) => r.css).join(""),
@@ -144,7 +148,10 @@ export class Morph {
       const template = generate(pageProps);
 
       const pageObject = this.morphLayout.wrapper
-        ? await render(this.morphLayout?.wrapper({ child: template, ...pageProps }), pageProps)
+        ? await render(
+          this.morphLayout?.wrapper({ child: template, ...pageProps }),
+          pageProps,
+        )
         : await render(template, pageProps);
 
       return c.html(
@@ -215,9 +222,31 @@ export const js = (str: TemplateStringsArray, ...args: any[]) => ({
   str: `(function() {${buildString(str, args)}})();`,
 });
 
+export const fn = (f: Function) => ({
+  isJS: true,
+  type: "js",
+  str: `(${f.toString()})();`,
+});
+
+export const onclick = (fn: Function) => {
+  return `onclick='(${fn.toString()})()'`;
+};
+
+export const script = (fn: Function) => {
+  return `<script>(${fn.toString()})()</script>`;
+};
+
+export const style = (str: TemplateStringsArray, ...args: any[]) =>
+  `class="${styled(str, args)}"`;
+
 export const morph = new Morph({
   layout: {
-    layout: (page: string, css: string, js: string, meta: Partial<LayoutOptions>) => `
+    layout: (
+      page: string,
+      css: string,
+      js: string,
+      meta: Partial<LayoutOptions>,
+    ) => `
       <html>
         <head>
           <meta charset="UTF-8">
@@ -266,17 +295,6 @@ export const component = <T = {}>(
       };
     };
   }
-};
-
-export const style = (str: TemplateStringsArray, ...args: any[]) =>
-  `class="${styled(str, args)}"`;
-
-export const onclick = (fn: Function) => {
-  return `onclick='(${fn.toString()})()'`;
-};
-
-export const script = (fn: Function) => {
-  return `<script>(${fn.toString()})()</script>`;
 };
 
 // deno-fmt-ignore

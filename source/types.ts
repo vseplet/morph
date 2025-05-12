@@ -35,7 +35,12 @@ export type MorphPageProps = MorphBaseProps & {
 };
 
 export type Layout = {
-  layout: (page: string, css: string, js: string, meta: Partial<LayoutOptions>) => string;
+  layout: (
+    page: string,
+    css: string,
+    js: string,
+    meta: Partial<LayoutOptions>,
+  ) => string;
   wrapper?: MorphTemplateGenerator<{ child: MorphTemplate } & MorphPageProps>;
 };
 

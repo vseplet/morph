@@ -6,10 +6,10 @@ Deno.test("1 Render asnyc component", async () => {
   const cmp = component(
     async () =>
       html`
-      <div>
-        <p>Hello, World</p>
-      </div>
-    `,
+        <div>
+          <p>Hello, World</p>
+        </div>
+      `,
   );
 
   assertEquals(await renderWithEmptyRequest(cmp), {
