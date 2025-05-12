@@ -15,13 +15,13 @@ Deno.test("7 Render component with JavaScript", async () => {
 
   assertEquals(await renderWithEmptyRequest(cmp), {
     html: "\n" +
-      "      <div>\n" +
-      '        <p id="title">Hello, World</p>\n' +
-      "        \n" +
-      "      </div>\n" +
-      "    ",
+      "        <div>\n" +
+      '          <p id="title">Hello, World</p>\n' +
+      "          \n" +
+      "        </div>\n" +
+      "      ",
     css: "",
     js: "(function() {document.querySelector('#title').innerHTML = 'LoL';})();",
-    meta: {},
+    meta: {}
   });
 });
