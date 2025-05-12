@@ -217,16 +217,21 @@ export const js = (str: TemplateStringsArray, ...args: any[]) => ({
 
 export const morph = new Morph({
   layout: {
-    layout: (page) => `
+    layout: (page: string, css: string, js: string, meta: Partial<LayoutOptions>) => `
       <html>
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <script src="https://unpkg.com/htmx.org@2.0.1"></script>
-          <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+          <title>${meta.title || "Morph Default"}</title>
+          ${meta.head || ""}
+          <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+          <style>${css}</style>
         </head>
         <body>
+          ${meta.bodyStart || ""}
           ${page}
+          ${meta.bodyEnd || ""}
+          <script>${js}</script>
         </body>
       </html>
     `,
@@ -295,7 +300,7 @@ export const basic = layout<{
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             ${
               options.htmx
-                ? `<script src="https://unpkg.com/htmx.org@2.0.1"></script>`
+                ? `<script src="https://unpkg.com/htmx.org@2.0.4"></script>`
                 : ""
             }
             ${
@@ -316,7 +321,7 @@ export const basic = layout<{
             }
             ${
               options.jsonEnc
-                ? `<script src="https://unpkg.com/htmx-ext-json-enc@2.0.1/json-enc.js"></script>`
+                ? `<script src="https://unpkg.com/htmx-ext-json-enc@2.0.4/json-enc.js"></script>`
                 : ""
             }
             ${
@@ -338,9 +343,11 @@ export const basic = layout<{
           </head>
           <body>
             ${options.bodyStart || ""}
+            ${meta.bodyStart || ""}
             ${page}
             ${options.bodyEnd || ""}
-            ${js}
+            ${meta.bodyEnd || ""}
+            <script>${js}</script>
           </body>
         </html>
       `;
