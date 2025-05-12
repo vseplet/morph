@@ -1,6 +1,5 @@
 # morph
 
-
 ```sh
 deno add @hono/hono
 deno add @vseplet/morph
@@ -30,7 +29,6 @@ Deno.serve(
         ${fn(() => {
           console.log('Hello!')
         })}
-      `)).fetch(c.req.raw)
-    ).fetch,
+      `)).fetch(c.req.raw)).fetch,
 );
 ```

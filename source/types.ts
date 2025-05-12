@@ -39,9 +39,21 @@ export type Layout = {
     page: string,
     css: string,
     js: string,
-    meta: Partial<LayoutOptions>,
-  ) => string;
+    meta: MetaOptions,
+  ) => { text: string; meta: MetaOptions };
   wrapper?: MorphTemplateGenerator<{ child: MorphTemplate } & MorphPageProps>;
+};
+
+export type MetaOptions = {} & {
+  // to layout
+  title?: string;
+  head?: string;
+  bodyStart?: string;
+  bodyEnd?: string;
+  //
+  headers?: { [name: string]: string };
+  statusText?: string;
+  statusCode?: number;
 };
 
 export type LayoutOptions = {

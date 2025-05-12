@@ -3,6 +3,7 @@ import { type Context, Hono } from "@hono/hono";
 import type {
   Layout,
   LayoutOptions,
+  MetaOptions,
   MorphAsyncTemplate,
   MorphPageProps,
   MorphTemplate,
@@ -154,14 +155,21 @@ export class Morph {
         )
         : await render(template, pageProps);
 
-      return c.html(
-        this.morphLayout.layout(
-          pageObject.html,
-          pageObject.css,
-          pageObject.js,
-          pageObject.meta,
-        ),
+      const { text, meta } = this.morphLayout.layout(
+        pageObject.html,
+        pageObject.css,
+        pageObject.js,
+        pageObject.meta,
       );
+
+      return new Response(text, {
+        headers: {
+          "Content-Type": "text/html",
+          ...meta.headers,
+        },
+        status: meta?.statusCode,
+        statusText: meta?.statusText,
+      });
     };
 
     return this;
@@ -210,7 +218,8 @@ export const styled = (str: TemplateStringsArray, ...args: any[]) => {
   };
 };
 
-export const meta = (data: {}) => ({
+// TODO: добавить куки, статус код
+export const meta = (data: MetaOptions) => ({
   isMeta: true,
   type: "meta",
   meta: data,
@@ -246,7 +255,8 @@ export const morph = new Morph({
       css: string,
       js: string,
       meta: Partial<LayoutOptions>,
-    ) => `
+    ) => ({
+      text: `
       <html>
         <head>
           <meta charset="UTF-8">
@@ -264,6 +274,8 @@ export const morph = new Morph({
         </body>
       </html>
     `,
+      meta,
+    }),
   },
 });
 
@@ -311,64 +323,67 @@ export const basic = layout<{
   return {
     wrapper: options?.wrapper,
     layout: (page: string, css: string, js: string, meta: Partial<LayoutOptions>) => {
-      return `
-        <html>
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            ${
-              options.htmx
-                ? `<script src="https://unpkg.com/htmx.org@2.0.4"></script>`
-                : ""
-            }
-            ${
-              options.alpine
-                ? `<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>`
-                : ""
-            }
-            ${
-              options.bootstrap
-                ? `<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-            integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">`
-                : ""
-            }
-            ${
-              options.bootstrapIcons
-                ? `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">`
-                : ""
-            }
-            ${
-              options.jsonEnc
-                ? `<script src="https://unpkg.com/htmx-ext-json-enc@2.0.4/json-enc.js"></script>`
-                : ""
-            }
-            ${
-              options.bluma
-                ? `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">`
-                : ""
-            }
-            ${
-              options.hyperscript
-                ? `<script src="https://unpkg.com/hyperscript.org@0.9.12"></script>`
-                : ""
-            }
-            <title>${meta.title || options.title || "Reface Clean"}</title>
-            ${options.head || ""}
-            ${meta.head || ""}
-            <style>
-              ${css}
-            </style>
-          </head>
-          <body>
-            ${options.bodyStart || ""}
-            ${meta.bodyStart || ""}
-            ${page}
-            ${options.bodyEnd || ""}
-            ${meta.bodyEnd || ""}
-            <script>${js}</script>
-          </body>
-        </html>
-      `;
+      return {
+        text: `
+          <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              ${
+                options.htmx
+                  ? `<script src="https://unpkg.com/htmx.org@2.0.4"></script>`
+                  : ""
+              }
+              ${
+                options.alpine
+                  ? `<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>`
+                  : ""
+              }
+              ${
+                options.bootstrap
+                  ? `<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+              integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">`
+                  : ""
+              }
+              ${
+                options.bootstrapIcons
+                  ? `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">`
+                  : ""
+              }
+              ${
+                options.jsonEnc
+                  ? `<script src="https://unpkg.com/htmx-ext-json-enc@2.0.4/json-enc.js"></script>`
+                  : ""
+              }
+              ${
+                options.bluma
+                  ? `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">`
+                  : ""
+              }
+              ${
+                options.hyperscript
+                  ? `<script src="https://unpkg.com/hyperscript.org@0.9.12"></script>`
+                  : ""
+              }
+              <title>${meta.title || options.title || "Reface Clean"}</title>
+              ${options.head || ""}
+              ${meta.head || ""}
+              <style>
+                ${css}
+              </style>
+            </head>
+            <body>
+              ${options.bodyStart || ""}
+              ${meta.bodyStart || ""}
+              ${page}
+              ${options.bodyEnd || ""}
+              ${meta.bodyEnd || ""}
+              <script>${js}</script>
+            </body>
+          </html>
+        `,
+        meta
+      };
     },
   };
 });
