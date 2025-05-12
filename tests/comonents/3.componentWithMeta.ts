@@ -10,7 +10,7 @@ Deno.test("3 Render component with meta information", async () => {
         <div>
           <p>Hello, World</p>
         </div>
-        ${meta({ msg: "Hello!" })}
+        ${meta({ title: "Hello, World!", head: "<meta>lol</meta>" })}
       `,
   );
 
@@ -22,6 +22,6 @@ Deno.test("3 Render component with meta information", async () => {
       "        \n" +
       "      ",
     css: "",
-    meta: { msg: "Hello!" },
+    meta: { head: "<meta>lol</meta>", title: "Hello, World!" },
   });
 });
