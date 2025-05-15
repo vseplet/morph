@@ -87,9 +87,14 @@ const app = new Hono()
 
           <h1>Hello, World!</h1>
 
-          <pre class="${styled`color:red;`}">
-            ${await Deno.readTextFile("./deno.json")}
-          </pre>
+          <pre class="${styled`color:red;`}">${
+            (await (await fetch("https://icanhazdadjoke.com/", {
+              headers: {
+                Accept: "application/json",
+                "User-Agent": "My Fun App (https://example.com)",
+              },
+            })).json()).joke
+          }</pre>
 
           ${fn(() => alert("Hello!"))}
         `),
