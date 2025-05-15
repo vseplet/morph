@@ -76,3 +76,20 @@ export type LayoutOptions = {
   bodyStart?: string;
   bodyEnd?: string;
 };
+
+export type MorphRequest = {
+  raw: Request;
+  route: string;
+  params: {
+    [x: string]: string;
+  };
+  headers: Record<string, string>;
+  query: Record<string, string>;
+};
+
+export type RpcHandlers<R> = {
+  [key in keyof R]: (
+    req: MorphRequest,
+    args: R[key],
+  ) => Promise<MorphTemplate>;
+};

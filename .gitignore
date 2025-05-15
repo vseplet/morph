@@ -8,3 +8,4 @@ TAG-NAME.txt
 apify.ts
 .env
 node
+bun

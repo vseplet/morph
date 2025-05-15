@@ -22,6 +22,6 @@ Deno.test("7 Render component with JavaScript", async () => {
       "      ",
     css: "",
     js: "(function() {document.querySelector('#title').innerHTML = 'LoL';})();",
-    meta: {}
+    meta: {},
   });
 });

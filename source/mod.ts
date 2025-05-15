@@ -9,10 +9,13 @@ import type {
   MorphTemplate,
   MorphTemplateAsyncGenerator,
   MorphTemplateGenerator,
+  RpcHandlers,
 } from "./types.ts";
 import { buildString } from "./helpers.ts";
 
 export * from "./types.ts";
+
+let counter = 0;
 
 export const render = async (
   template:
@@ -24,7 +27,7 @@ export const render = async (
     | Array<MorphTemplateGenerator<any> | MorphTemplateAsyncGenerator<any>>
     | any,
   pageProps: MorphPageProps,
-): Promise<{ html: string; css: string; js: string; meta: {} }> => {
+): Promise<{ html: string; css: string; js: string; meta: MetaOptions }> => {
   let meta: Record<string, any> = {};
   let css = "";
   let js = "";
@@ -120,7 +123,7 @@ const renderArgument = async (
 export class Morph {
   private morphLayout: Layout;
   private pages: Record<string, any> = {};
-  private partials: Record<string, any> = {};
+  private rpcHandlers: Record<string, RpcHandlers<any>> = {};
   private honoRouter: Hono | null = null;
 
   constructor(
@@ -175,7 +178,12 @@ export class Morph {
     return this;
   }
 
-  hono() {
+  rpc(obj: { name: string; handlers: RpcHandlers<any> }) {
+    this.rpcHandlers[obj.name] = obj.handlers;
+    return this;
+  }
+
+  build() {
     if (this.honoRouter == null) {
       const router = new Hono();
 
@@ -183,10 +191,45 @@ export class Morph {
         router.get(route, handler);
       }
 
-      for (const [route, handler] of Object.entries(this.partials)) {
-        router.get(route, handler);
+      // create rpc routes
+      for (const [name, handlers] of Object.entries(this.rpcHandlers)) {
+        for (const [key, handler] of Object.entries(handlers)) {
+          const route = `/rpc/${name}/${key}`;
+
+          router.post(route, async (c: Context) => {
+            const args = await c.req.json();
+            const response = await handler({
+              raw: c.req.raw,
+              route,
+              params: c.req.param(),
+              query: c.req.query(),
+              headers: c.req.header(),
+            }, args);
+
+            const result = await render(response, {
+              request: c.req.raw,
+              route,
+              params: c.req.param(),
+              query: c.req.query(),
+              headers: c.req.header(),
+            });
+
+            return new Response(
+              `${result.html}<style>${result.css}</style><script>${result.js}</script>`,
+              {
+                headers: {
+                  "Content-Type": "text/html",
+                  ...result.meta.headers,
+                },
+                status: result.meta?.statusCode,
+                statusText: result.meta?.statusText,
+              },
+            );
+          });
+        }
       }
 
+      this.honoRouter = router;
       return router;
     } else {
       return this.honoRouter;
@@ -194,7 +237,9 @@ export class Morph {
   }
 
   async fetch(req: Request) {
-    return await this.hono().fetch(req);
+    return this.honoRouter
+      ? await this.honoRouter.fetch(req)
+      : this.build().fetch(req);
   }
 }
 
@@ -257,23 +302,24 @@ export const morph = new Morph({
       meta: Partial<LayoutOptions>,
     ) => ({
       text: `
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <title>${meta.title || "Morph Default"}</title>
-          ${meta.head || ""}
-          <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-          <style>${css}</style>
-        </head>
-        <body>
-          ${meta.bodyStart || ""}
-          ${page}
-          ${meta.bodyEnd || ""}
-          <script>${js}</script>
-        </body>
-      </html>
-    `,
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>${meta.title || "Morph Default"}</title>
+            ${meta.head || ""}
+            <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+            <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/json-enc.js"></script>
+            <style>${css}</style>
+          </head>
+          <body>
+            ${meta.bodyStart || ""}
+            ${page}
+            ${meta.bodyEnd || ""}
+            <script>${js}</script>
+          </body>
+        </html>
+      `,
       meta,
     }),
   },
@@ -387,3 +433,27 @@ export const basic = layout<{
     },
   };
 });
+
+export const rpc = <A>(handlers: RpcHandlers<A>): {
+  rpc: { [key in keyof A]: (args?: A[key]) => string };
+  handlers: RpcHandlers<A>;
+  name: string;
+} => {
+  const name = `rpc-${counter++}`;
+
+  const rpc: {
+    [key in keyof A]: (args?: A[key]) => string;
+  } = {} as any;
+
+  Object.keys(handlers).forEach((key) => {
+    rpc[key as keyof A] = (args?: A[keyof A]) =>
+      `hx-ext='json-enc' hx-post='/rpc/${name}/${key}'` +
+      (args ? ` hx-vals='${JSON.stringify(args)}'` : "");
+  });
+
+  return {
+    rpc,
+    handlers,
+    name,
+  };
+};
