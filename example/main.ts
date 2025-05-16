@@ -7,17 +7,13 @@ export const homePage = component((props) => html`
     title: `Hello, World! ${Math.random()}`,
     statusCode: 303,
   })}
-
   <a ${user.rpc.test({x: 1, y: "2"})} hx-trigger="every 1s">Загрузить юзера</a>
-
   <h1>Hello, World!</h1>
-
   <div class="${styled`
     color: red;
   `}">
     ${props.request.url}
   <div>
-
   ${fn(() => alert("Hello!"))}
 `);
 

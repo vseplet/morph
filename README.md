@@ -4,6 +4,9 @@
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/m/vseplet/morph)](https://github.com/vseplet/morph/pulse)
 [![GitHub last commit](https://img.shields.io/github/last-commit/vseplet/morph)](https://github.com/vseplet/morph/commits/main)
 
+
+
+
 ## 👋 👋 ATTENTION!
 > This package is under development and will be frequently updated. The author
 > would appreciate any help, advice, and pull requests! Thank you for your
@@ -55,7 +58,7 @@ but still need a clean and dynamic UI.
 ```npx jsr add @vseplet/morph```\
 ```npm i --save hono @hono/node-server```
 
-### Make main.ts/.mjs and add imports
+### Make main.ts and add imports
 
 ***Deno***
 ```ts
@@ -125,7 +128,8 @@ serve(app)
 ```bun main.ts```
 
 ***Node***\
-```node main.mjs```
+```node --experimental-strip-types main.ts```
+
 
 
 ## License
