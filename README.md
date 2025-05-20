@@ -5,8 +5,6 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/vseplet/morph)](https://github.com/vseplet/morph/commits/main)
 
 
-
-
 ## 👋 👋 ATTENTION!
 > This package is under development and will be frequently updated. The author
 > would appreciate any help, advice, and pull requests! Thank you for your
@@ -17,6 +15,17 @@
 **Morph** is an embeddable fullstack library
 for building [Hypermedia-Driven Applications](https://htmx.org/essays/hypermedia-driven-applications/)
 without a build step, based on [HTMX](https://htmx.org/).
+- [Morph](#morph)
+  - [👋 👋 ATTENTION!](#--attention)
+    - [Core principles:](#core-principles)
+  - [Get started](#get-started)
+    - [Add packages](#add-packages)
+    - [Make main.ts and add imports](#make-maints-and-add-imports)
+    - [Create simple page (for all runtimes)](#create-simple-page-for-all-runtimes)
+    - [Setup server](#setup-server)
+    - [And run](#and-run)
+  - [Documentation](#documentation)
+  - [License](#license)
 
 Morph combines the best of SSR, SPA, and islands architecture,
 while sticking to plain HTML, CSS, and JS.
@@ -130,7 +139,7 @@ serve(app)
 ***Node***\
 ```node --experimental-strip-types main.ts```
 
-
+## Documentation
 
 ## License
 

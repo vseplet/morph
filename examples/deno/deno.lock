@@ -1,0 +1,40 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@hono/hono@4.6.15": "4.6.15",
+    "jsr:@hono/hono@^4.7.10": "4.7.10",
+    "jsr:@std/assert@1": "1.0.13",
+    "jsr:@std/internal@^1.0.6": "1.0.7",
+    "jsr:@vseplet/morph@0.2": "0.2.0"
+  },
+  "jsr": {
+    "@hono/hono@4.6.15": {
+      "integrity": "935b3b12e98e4b22bcd1aa4dbe6587321e431c79829eba61f535b4ede39fd8b1"
+    },
+    "@hono/hono@4.7.10": {
+      "integrity": "e59029e252af371abe43e8e4f9a115e38974c6bd5972022372bf89f763269cc7"
+    },
+    "@std/assert@1.0.13": {
+      "integrity": "ae0d31e41919b12c656c742b22522c32fb26ed0cba32975cb0de2a273cb68b29",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/internal@1.0.7": {
+      "integrity": "39eeb5265190a7bc5d5591c9ff019490bd1f2c3907c044a11b0d545796158a0f"
+    },
+    "@vseplet/morph@0.2.0": {
+      "integrity": "a574aed71c83bd565f077ed312cbc48b53fd63a89d752b974f94063934894e90",
+      "dependencies": [
+        "jsr:@hono/hono@4.6.15"
+      ]
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@hono/hono@^4.7.10",
+      "jsr:@std/assert@1",
+      "jsr:@vseplet/morph@0.2"
+    ]
+  }
+}

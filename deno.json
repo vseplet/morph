@@ -9,7 +9,7 @@
     }
   },
   "tasks": {
-    "dev": "deno -A --watch ./example/main.ts"
+    "dev": "deno -A --watch ./examples/deno/main.ts"
   },
   "imports": {
     "$/tests/helpers": "./tests/helpers.ts",

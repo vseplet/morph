@@ -1,0 +1,17 @@
+{
+  "name": "modrh_node_example",
+  "version": "1.0.0",
+  "description": "Example of using Modrh in Node.js",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node --experimental-strip-types index.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.14.1",
+    "@vseplet/morph": "npm:@jsr/vseplet__morph@^0.1.5",
+    "hono": "^4.7.9"
+  }
+}

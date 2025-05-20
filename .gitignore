@@ -7,5 +7,4 @@ TAG-NAME.txt
 .drafts
 apify.ts
 .env
-node
-bun
+node_modules

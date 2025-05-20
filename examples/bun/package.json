@@ -1,0 +1,19 @@
+{
+  "name": "modrh_bun_example",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@vseplet/morph": "npm:@jsr/vseplet__morph",
+    "hono": "^4.7.9"
+  }
+}
