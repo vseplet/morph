@@ -1,9 +1,25 @@
-# Morph
+<table>
+<tr>
+<td align="center">
+  <img src="./morph.png" alt="Morph mascot" width="180" style="border-radius: 16px;"/>
+</td>
+<td width="70%">
+  
+<h1>Morph</h1>
 
-[![JSR](https://jsr.io/badges/@vseplet/morph)](https://jsr.io/@vseplet/morph)
-[![GitHub commit activity](https://img.shields.io/github/commit-activity/m/vseplet/morph)](https://github.com/vseplet/morph/pulse)
-[![GitHub last commit](https://img.shields.io/github/last-commit/vseplet/morph)](https://github.com/vseplet/morph/commits/main)
+<a href="https://jsr.io/@vseplet/morph">
+  <img src="https://jsr.io/badges/@vseplet/morph" />
+</a>
+<a href="https://github.com/vseplet/morph/pulse">
+  <img src="https://img.shields.io/github/commit-activity/m/vseplet/morph" />
+</a>
+<a href="https://github.com/vseplet/morph/commits/main">
+  <img src="https://img.shields.io/github/last-commit/vseplet/morph" />
+</a>
 
+</td>
+</tr>
+</table>
 
 ## 👋 👋 ATTENTION!
 > This package is under development and will be frequently updated. The author
@@ -15,17 +31,16 @@
 **Morph** is an embeddable fullstack library
 for building [Hypermedia-Driven Applications](https://htmx.org/essays/hypermedia-driven-applications/)
 without a build step, based on [HTMX](https://htmx.org/).
-- [Morph](#morph)
-  - [👋 👋 ATTENTION!](#--attention)
-    - [Core principles:](#core-principles)
-  - [Get started](#get-started)
-    - [Add packages](#add-packages)
-    - [Make main.ts and add imports](#make-maints-and-add-imports)
-    - [Create simple page (for all runtimes)](#create-simple-page-for-all-runtimes)
-    - [Setup server](#setup-server)
-    - [And run](#and-run)
-  - [Documentation](#documentation)
-  - [License](#license)
+- [👋 👋 ATTENTION!](#--attention)
+  - [Core principles:](#core-principles)
+- [Get started](#get-started)
+  - [Add packages](#add-packages)
+  - [Make main.ts and add imports](#make-maints-and-add-imports)
+  - [Create simple page (for all runtimes)](#create-simple-page-for-all-runtimes)
+  - [Setup server](#setup-server)
+  - [And run](#and-run)
+- [Documentation](#documentation)
+- [License](#license)
 
 Morph combines the best of SSR, SPA, and islands architecture,
 while sticking to plain HTML, CSS, and JS.
