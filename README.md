@@ -1,25 +1,12 @@
-<table>
-<tr>
-<td align="center">
-  <img src="./morph.png" alt="Morph mascot" width="180" style="border-radius: 16px;"/>
-</td>
-<td width="70%">
-  
-<h1>Morph</h1>
+# Morph
 
-<a href="https://jsr.io/@vseplet/morph">
-  <img src="https://jsr.io/badges/@vseplet/morph" />
-</a>
-<a href="https://github.com/vseplet/morph/pulse">
-  <img src="https://img.shields.io/github/commit-activity/m/vseplet/morph" />
-</a>
-<a href="https://github.com/vseplet/morph/commits/main">
-  <img src="https://img.shields.io/github/last-commit/vseplet/morph" />
-</a>
+<p align="center">
+  <img src="./morph.png" alt="Morph mascot" width="256" />
+</p>
 
-</td>
-</tr>
-</table>
+[![JSR](https://jsr.io/badges/@vseplet/morph)](https://jsr.io/@vseplet/morph)
+[![GitHub commit activity](https://img.shields.io/github/commit-activity/m/vseplet/morph)](https://github.com/vseplet/morph/pulse)
+[![GitHub last commit](https://img.shields.io/github/last-commit/vseplet/morph)](https://github.com/vseplet/morph/commits/main)
 
 ## 👋 👋 ATTENTION!
 > This package is under development and will be frequently updated. The author
@@ -31,16 +18,17 @@
 **Morph** is an embeddable fullstack library
 for building [Hypermedia-Driven Applications](https://htmx.org/essays/hypermedia-driven-applications/)
 without a build step, based on [HTMX](https://htmx.org/).
-- [👋 👋 ATTENTION!](#--attention)
-  - [Core principles:](#core-principles)
-- [Get started](#get-started)
-  - [Add packages](#add-packages)
-  - [Make main.ts and add imports](#make-maints-and-add-imports)
-  - [Create simple page (for all runtimes)](#create-simple-page-for-all-runtimes)
-  - [Setup server](#setup-server)
-  - [And run](#and-run)
-- [Documentation](#documentation)
-- [License](#license)
+- [Morph](#morph)
+  - [👋 👋 ATTENTION!](#--attention)
+    - [Core principles:](#core-principles)
+  - [Get started](#get-started)
+    - [Add packages](#add-packages)
+    - [Make main.ts and add imports](#make-maints-and-add-imports)
+    - [Create simple page (for all runtimes)](#create-simple-page-for-all-runtimes)
+    - [Setup server](#setup-server)
+    - [And run](#and-run)
+  - [Documentation](#documentation)
+  - [License](#license)
 
 Morph combines the best of SSR, SPA, and islands architecture,
 while sticking to plain HTML, CSS, and JS.
@@ -54,14 +42,14 @@ Currently, Morph runs on [Hono](https://hono.dev/),
 but support for other backends may be added in the future.
 
 ### Core principles:
-- Each component can call its own API that returns hypertext (other components)\
-- All components are rendered on the server and have access to server-side context\
-- Components can be rendered and re-rendered independently\
-- Components form a hierarchy, can be nested in one another, and returned from APIs\
-- Minimal or no client-side JavaScript\
+- Each component can call its own API that returns hypertext (other components)
+- All components are rendered on the server and have access to server-side context
+- Components can be rendered and re-rendered independently
+- Components form a hierarchy, can be nested in one another, and returned from APIs
+- Minimal or no client-side JavaScript
 - No build step\
-- No need to design API data structures upfront\
-- The library can be embedded into any Deno/Node/Bun project\
+- No need to design API data structures upfront
+- The library can be embedded into any Deno/Node/Bun project
 
 Morph is ideal when there’s no need to split frontend and backend into separate services.
 It works especially well for small Telegram bots,
@@ -70,6 +58,8 @@ but still need a clean and dynamic UI.
 
 
 ## Get started
+[(see full examples)](./examples/)
+
 ### Add packages
 ***Deno***\
 ```deno add jsr:@vseplet/morph jsr:@hono/hono```

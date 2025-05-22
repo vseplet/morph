@@ -8,13 +8,14 @@ export const homePage = component((props) => html`
     statusCode: 303,
   })}
   <a ${user.rpc.test({x: 1, y: "2"})} hx-trigger="every 1s">Загрузить юзера</a>
+
   <h1>Hello, World!</h1>
   <div class="${styled`
     color: red;
   `}">
     ${props.request.url}
   <div>
-  ${fn(() => alert("Hello!"))}
+  ${fn(() => alert("Hello!"))} // client-side code
 `);
 
 const user = rpc({
