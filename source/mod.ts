@@ -328,19 +328,18 @@ export const morph = new Morph({
 export const layout = <C>(cb: (layoutOptions: C & LayoutOptions) => Layout) =>
   cb;
 
+/** */
 export const component = <T = {}>(
   generate: T extends void
     ? (props: MorphPageProps) => Promise<MorphTemplate> | MorphTemplate
     : (props: T & MorphPageProps) => Promise<MorphTemplate> | MorphTemplate,
-  slots?: any,
 ) => {
   if (generate.constructor.name === "AsyncFunction") {
     return (props: T) => {
       return {
         isAsyncTemplateGenerator: true,
         generate,
-        props,
-        slots,
+        props
       };
     };
   } else {
@@ -348,8 +347,7 @@ export const component = <T = {}>(
       return {
         isTemplateGenerator: true,
         generate,
-        props,
-        slots,
+        props
       };
     };
   }
