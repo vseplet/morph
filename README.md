@@ -28,6 +28,15 @@ without a build step, based on [HTMX](https://htmx.org/).
     - [Setup server](#setup-server)
     - [And run](#and-run)
   - [Documentation](#documentation)
+    - [Templates](#templates)
+    - [Components](#components)
+    - [Client-Side JavaScript](#client-side-javascript)
+    - [Styles](#styles)
+    - [Routing, pages and Hono](#routing-pages-and-hono)
+    - [RPC and HTMX](#rpc-and-htmx)
+    - [Layouts](#layouts)
+    - [Meta](#meta)
+  - [Conclusion](#conclusion)
   - [License](#license)
 
 Morph combines the best of SSR, SPA, and islands architecture,
@@ -38,7 +47,7 @@ using Deno and Deno Deploy.
 Traditional stacks that separate frontend and backend with complex APIs
 and use React or Vue felt overly heavy, complex, and expensive for small projects.
 
-Currently, Morph runs on [Hono](https://hono.dev/),
+Currently, Morph runs on [Hono](https://hono.dev/) and [HTMX](https://htmx.org/),
 but support for other backends may be added in the future.
 
 ### Core principles:
@@ -51,9 +60,9 @@ but support for other backends may be added in the future.
 - No need to design API data structures upfront
 - The library can be embedded into any Deno/Node/Bun project
 
-Morph is ideal when there’s no need to split frontend and backend into separate services.
+Morph is ideal when there's no need to split frontend and backend into separate services.
 It works especially well for small Telegram bots,
-desktop apps, or internal tools that don’t justify a full frontend stack
+desktop apps, or internal tools that don't justify a full frontend stack
 but still need a clean and dynamic UI.
 
 
@@ -74,23 +83,28 @@ but still need a clean and dynamic UI.
 
 ### Make main.ts and add imports
 
+First, import Hono based on your runtime:
+
 ***Deno***
 ```ts
 import { Hono } from "@hono/hono";
-import { component, fn, html, meta, morph, styled } from "@vseplet/morph";
 ```
 
 ***Bun***
 ```ts
 import { Hono } from "hono";
-import { component, fn, html, meta, morph, styled } from "@vseplet/morph";
 ```
 
 ***Node***
 ```ts
 import { serve } from '@hono/node-server'
 import { Hono } from "hono";
-import { component, fn, html, meta, morph, styled } from "@vseplet/morph";
+```
+
+Then, add Morph imports (same for all runtimes):
+
+```ts
+import { component, fn, js, html, meta, morph, styled } from "@vseplet/morph";
 ```
 
 ### Create simple page (for all runtimes)
@@ -145,6 +159,207 @@ serve(app)
 ```node --experimental-strip-types main.ts```
 
 ## Documentation
+
+Key points to understand:
+
+Morph uses Hono under the hood for routing, middleware functions, and more. All routes are described using Hono's routing syntax.
+
+In Morph, everything consists of components that return template literals. The templates are described using the `html` tagged template literal: html`some html here`.
+
+All components, templates, and other elements are rendered on the server upon request. In the future, the rendering results of pages and individual components may be cacheable.
+
+### Templates
+
+All components in Morph are functions that return template literals. Here's a simple example:
+
+```ts
+html`
+  <h1>Hello World<h1>
+`
+```
+
+Template literals are flexible and support all JavaScript template literal features, including nested templates:
+
+```ts
+const buttonName = "Click Me"
+
+html`
+  <h1>Hello World<h1>
+  ${html`
+    <button>${buttonName}</button>
+  `}
+`
+```
+
+They can also include functions (including asynchronous ones) that return templates:
+
+```ts
+const buttonName = "Click Me"
+
+html`
+  <h1>Hello World<h1>
+  ${async () => {
+    // some async code here
+    return html`
+      <p>And here's some data</p>
+    `
+  }}
+`
+```
+
+### Components
+
+Components are the building blocks of Morph applications. They are functions (possibly asynchronous) that accept props and return template literals. Pages themselves are also components.
+
+Here's a simple component example:
+
+```ts
+const cmp = component(
+  async () =>
+    html`
+      <div>
+        <p>Hello, World</p>
+      </div>
+    `,
+);
+```
+
+Components can accept typed props that are defined using TypeScript generics:
+
+```ts
+component<{ title: string }>(
+  async (props) =>
+    html`
+      <h1>${props.title}</h1>
+    `,
+);
+```
+
+Besides user-defined props, components have access to default props defined in the MorphPageProps type, including:
+```request: Request``` and ```headers: Record<string, string>```. This provides immediate access to request headers, parameters, and other request details during component rendering.
+
+Components can be composed together:
+
+```ts
+const h1 = component<{title: string}>((props) => html`<h1>${props.title}</h1>`);
+
+const page = component(() => html`
+  <page>
+    ${h1({title: "Hello, World"})}
+  </page>
+`);
+```
+
+And they support array operations for dynamic rendering:
+
+```ts
+const h1 = component<{title: string}>((props) => html`<h1>${props.title}</h1>`);
+
+const page = component(() => html`
+  <page>
+    ${["title 1", "title 2"].map(title => h1({title}))}
+  </page>
+`);
+```
+
+### Client-Side JavaScript
+
+You can embed JavaScript code that will run on the client side directly in your templates. Here's a simple example:
+
+```ts
+html`
+  <div>
+    <p id="title">Hello, World</p>
+    ${js`document.querySelector('#title').innerHTML = 'LoL';`}
+  </div>
+`
+```
+
+This code will be wrapped in an anonymous function and added to the page's `<body>` right after the main HTML content.
+
+Additionally, you can define a function that will be transpiled to a string and inserted into the page code in a similar way:
+
+```ts
+html`
+  <div>
+    <p id="title">Hello, World</p>
+    ${fn(() => document.querySelector('#title').innerHTML = 'LoL')}
+  </div>
+`
+```
+
+### Styles
+
+Not everything is convenient to describe in separate .css files or (especially) inline through style=...
+In some cases, it might be more convenient to generate an entire class at once, and for this purpose, we have the following approach:
+
+```ts
+const color = "#0056b3";
+
+const buttonStyle = styled`
+  border-radius: 15px;
+  border: 1px solid black;
+  cursor: pointer;
+  font-size: 16px;
+
+  &:hover {
+    background-color: ${color};
+  }
+`;
+
+html`
+  <div>
+    <button class="${buttonStyle}">Click Me</button>
+  </div>
+`;
+```
+
+### Routing, pages and Hono
+
+The entry point is the `morph` object, which provides methods for creating pages and handling their rendering on request:
+
+```ts
+const website = morph
+  .page("/a", cmpA)
+  .page("/b", cmpB)
+```
+
+Then, using Hono, you can create an application and start serving it:
+
+```ts
+const app = new Hono()
+  .all("/*", async (c) => website.fetch(c.req.raw));
+
+// Start the server (implementation varies by runtime)
+Deno.serve(app.fetch); // for Deno
+// export default app; // for Bun
+// serve(app); // for Node.js
+```
+
+### RPC and HTMX
+
+[Coming soon]
+
+### Layouts
+
+[Coming soon]
+
+### Meta
+
+[Coming soon]
+
+
+## Conclusion
+
+This project is currently in the prototyping stage. Many things may change, be added, or removed as we work towards the main project goals. I welcome any help and contributions:
+
+- Test the library and report issues
+- Study the documentation and suggest improvements
+- Submit pull requests with your changes
+- Share your ideas and feedback
+- Use Morph in your pet projects
+
+Feel free to reach out to me on Telegram for any questions or discussions: [@vseplet](https://t.me/vseplet)
 
 ## License
 

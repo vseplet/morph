@@ -1,3 +1,4 @@
+// deno-lint-ignore-file
 import { type Context, Hono } from "@hono/hono";
 
 import type {
@@ -5,6 +6,9 @@ import type {
   LayoutOptions,
   MetaOptions,
   MorphAsyncTemplate,
+  MorphCSS,
+  MorphJS,
+  MorphMeta,
   MorphPageProps,
   MorphTemplate,
   MorphTemplateAsyncGenerator,
@@ -28,7 +32,7 @@ export const render = async (
     | any,
   pageProps: MorphPageProps,
 ): Promise<{ html: string; css: string; js: string; meta: MetaOptions }> => {
-  let meta: Record<string, any> = {};
+  let meta: MetaOptions = {};
   let css = "";
   let js = "";
 
@@ -74,10 +78,10 @@ export const render = async (
 };
 
 const renderArgument = async (
-  arg: any,
+  arg: MorphTemplate | MorphMeta | MorphCSS | MorphJS | any,
   pageProps: MorphPageProps,
-): Promise<{ html: string; css: string; js: string; meta: {} }> => {
-  const meta: Record<string, any> = {};
+): Promise<{ html: string; css: string; js: string; meta: MetaOptions }> => {
+  const meta: MetaOptions = {};
   const css = "";
   const js = "";
 
@@ -253,7 +257,7 @@ export const html = (
   args,
 });
 
-export const styled = (str: TemplateStringsArray, ...args: any[]) => {
+export const styled = (str: TemplateStringsArray, ...args: any[]): MorphCSS => {
   const name = "s" + crypto.randomUUID();
   return {
     isCSS: true,
@@ -264,19 +268,19 @@ export const styled = (str: TemplateStringsArray, ...args: any[]) => {
 };
 
 // TODO: добавить куки, статус код
-export const meta = (data: MetaOptions) => ({
+export const meta = (data: MetaOptions): MorphMeta => ({
   isMeta: true,
   type: "meta",
   meta: data,
 });
 
-export const js = (str: TemplateStringsArray, ...args: any[]) => ({
+export const js = (str: TemplateStringsArray, ...args: any[]): MorphJS => ({
   isJS: true,
   type: "js",
   str: `(function() {${buildString(str, args)}})();`,
 });
 
-export const fn = (f: Function) => ({
+export const fn = (f: Function): MorphJS => ({
   isJS: true,
   type: "js",
   str: `(${f.toString()})();`,

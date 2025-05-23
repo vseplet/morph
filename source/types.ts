@@ -20,6 +20,25 @@ export type MorphTemplateAsyncGenerator<T> = T extends void
   ? () => Promise<MorphTemplate>
   : (props: T) => Promise<MorphTemplate>;
 
+export type MorphMeta = {
+  isMeta: true;
+  type: "meta";
+  meta: MetaOptions;
+};
+
+export type MorphCSS = {
+  isCSS: true;
+  type: "css";
+  name: string;
+  str: string;
+};
+
+export type MorphJS = {
+  isJS: true;
+  type: "js";
+  str: string;
+};
+
 export type MorphBaseProps = {
   child?: MorphTemplate;
 };
