@@ -24,6 +24,6 @@ Deno.test("2 Render sync component with async function", async () => {
       "      ",
     css: "",
     js: "",
-    meta: {},
+    meta: {}
   });
 });

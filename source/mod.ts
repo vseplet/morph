@@ -1,12 +1,22 @@
 // deno-lint-ignore-file
 import { type Context, Hono } from "@hono/hono";
+// import { minify } from "html-minifier";
+
+/*
+TODO:
+- add html minify
+- fix problem with 0 in template
+- script management in partials
+*/
 
 import type {
   Layout,
   LayoutOptions,
   MetaOptions,
   MorphAsyncTemplate,
+  MorphComponent,
   MorphCSS,
+  MorphGenerate,
   MorphJS,
   MorphMeta,
   MorphPageProps,
@@ -50,7 +60,11 @@ export const render = async (
 
   if (template?.isAsyncTemplateGenerator || template?.isTemplateGenerator) {
     return render(
-      await template.generate({ ...template.props, ...pageProps }),
+      await template.generate({
+        ...template.props,
+        ...pageProps,
+        name: template.name,
+      }),
       pageProps,
     );
   }
@@ -61,7 +75,7 @@ export const render = async (
 
   meta = { ...template.meta };
 
-  const html = await template.str.reduce(
+  let html = await template.str.reduce(
     async (accPromise: any, part: any, i: any) => {
       const acc = await accPromise;
       const { html: renderedArg, css: argCss, js: argJs, meta: argMeta } =
@@ -97,7 +111,7 @@ const renderArgument = async (
 
   if (arg.isAsyncTemplateGenerator || arg.isTemplateGenerator) {
     return render(
-      await arg.generate({ ...arg.props, ...pageProps }),
+      await arg.generate({ ...arg.props, ...pageProps, hx: arg.hx }),
       pageProps,
     );
   }
@@ -128,6 +142,7 @@ export class Morph {
   private morphLayout: Layout;
   private pages: Record<string, any> = {};
   private rpcHandlers: Record<string, RpcHandlers<any>> = {};
+  private partials: Record<string, MorphComponent<any>> = {};
   private honoRouter: Hono | null = null;
 
   constructor(
@@ -143,21 +158,28 @@ export class Morph {
     return this;
   }
 
-  page(route: string, generate: any) {
+  partial<T>(cmp: MorphComponent<T>) {
+    this.partials[cmp.name] = cmp;
+    return this;
+  }
+
+  page<T>(route: string, component: MorphComponent<MorphPageProps>) {
     this.pages[route] = async (c: Context) => {
-      const pageProps = {
+      const pageProps: MorphPageProps = {
         request: c.req.raw,
         route,
         params: c.req.param(),
         query: c.req.query(),
         headers: c.req.header(),
+        hx: () => `hx-get='/api/${route}'`,
       };
 
-      const template = generate(pageProps);
+      const template = component(pageProps);
 
       const pageObject = this.morphLayout.wrapper
         ? await render(
-          this.morphLayout?.wrapper({ child: template, ...pageProps }),
+          // TODO: fix template type
+          this.morphLayout?.wrapper({ child: template as any, ...pageProps }),
           pageProps,
         )
         : await render(template, pageProps);
@@ -169,14 +191,26 @@ export class Morph {
         pageObject.meta,
       );
 
-      return new Response(text, {
-        headers: {
-          "Content-Type": "text/html",
-          ...meta.headers,
+      return new Response(
+        text/*await minify(text, {
+          collapseWhitespace: true,
+          removeComments: true,
+          removeAttributeQuotes: true,
+          removeEmptyAttributes: true,
+          removeRedundantAttributes: true,
+          removeScriptTypeAttributes: true,
+          removeStyleLinkTypeAttributes: true,
+          removeTagWhitespace: true,
+        })*/,
+        {
+          headers: {
+            "Content-Type": "text/html",
+            ...meta.headers,
+          },
+          status: meta?.statusCode,
+          statusText: meta?.statusText,
         },
-        status: meta?.statusCode,
-        statusText: meta?.statusText,
-      });
+      );
     };
 
     return this;
@@ -190,10 +224,6 @@ export class Morph {
   build() {
     if (this.honoRouter == null) {
       const router = new Hono();
-
-      for (const [route, handler] of Object.entries(this.pages)) {
-        router.get(route, handler);
-      }
 
       // create rpc routes
       for (const [name, handlers] of Object.entries(this.rpcHandlers)) {
@@ -216,10 +246,13 @@ export class Morph {
               params: c.req.param(),
               query: c.req.query(),
               headers: c.req.header(),
+              hx: () => `hx-get='/api/${route}'`,
             });
 
             return new Response(
-              `${result.html}<style>${result.css}</style><script>${result.js}</script>`,
+              `${result.html}${
+                result.css ? `<style>${result.css}</style>` : ""
+              }${result.js ? `<script>${result.js}</script>` : ""}`,
               {
                 headers: {
                   "Content-Type": "text/html",
@@ -231,6 +264,33 @@ export class Morph {
             );
           });
         }
+      }
+
+      // create partials routes
+      for (const [name, cmp] of Object.entries(this.partials)) {
+        router.get(`/draw/${name}`, async (c: Context) => {
+          const pageProps: MorphPageProps = {
+            request: c.req.raw,
+            route: `/draw/${name}`,
+            params: c.req.param(),
+            query: c.req.query(),
+            headers: c.req.header(),
+            hx: () => `hx-get='/draw/${name}'`,
+          };
+
+          const template = cmp(pageProps);
+          const pageObject = await render(template, pageProps);
+          return new Response(pageObject.html, {
+            headers: {
+              "Content-Type": "text/html",
+            },
+          });
+        });
+      }
+
+      // create pages routes
+      for (const [route, handler] of Object.entries(this.pages)) {
+        router.get(route, handler);
       }
 
       this.honoRouter = router;
@@ -334,27 +394,36 @@ export const layout = <C>(cb: (layoutOptions: C & LayoutOptions) => Layout) =>
 
 /** */
 export const component = <T = {}>(
-  generate: T extends void
-    ? (props: MorphPageProps) => Promise<MorphTemplate> | MorphTemplate
-    : (props: T & MorphPageProps) => Promise<MorphTemplate> | MorphTemplate,
-) => {
-  if (generate.constructor.name === "AsyncFunction") {
-    return (props: T) => {
+  generate: MorphGenerate<T>,
+): MorphComponent<T> => {
+  const name = `cmp-${counter++}`;
+
+  const cmp = (generate.constructor.name === "AsyncFunction"
+    ? function (props: T) {
       return {
         isAsyncTemplateGenerator: true,
+        type: "async-template-generator",
+        hx: () => `hx-get='/draw/${name}'`,
         generate,
-        props
+        props,
       };
-    };
-  } else {
-    return (props: T) => {
+    }
+    : function (props: T) {
       return {
         isTemplateGenerator: true,
+        type: "template-generator",
+        hx: () => `hx-get='/draw/${name}'`,
         generate,
-        props
+        props,
       };
-    };
-  }
+    }) as MorphComponent<T>
+
+  Object.defineProperty(cmp, "name", {
+    value: name,
+    writable: false,
+  });
+
+  return cmp;
 };
 
 // deno-fmt-ignore

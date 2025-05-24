@@ -7,4 +7,5 @@ export const renderWithEmptyRequest = async (cmp: any) =>
     params: {},
     headers: {},
     query: {},
+    hx: () => "",
   });

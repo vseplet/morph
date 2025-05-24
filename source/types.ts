@@ -13,12 +13,29 @@ export type MorphAsyncTemplate<P> = {
   props: P & MorphPageProps;
 };
 
-export type MorphTemplateGenerator<T> = T extends void ? () => MorphTemplate
-  : (props: T) => MorphTemplate;
+export type MorphGenerate<T> = T extends void
+  ? (props: MorphPageProps) => Promise<MorphTemplate> | MorphTemplate
+  : (props: T & MorphPageProps) => Promise<MorphTemplate> | MorphTemplate;
 
-export type MorphTemplateAsyncGenerator<T> = T extends void
-  ? () => Promise<MorphTemplate>
-  : (props: T) => Promise<MorphTemplate>;
+export type MorphTemplateGenerator<T> = (props: T) => {
+  isTemplateGenerator: true;
+  type: string;
+  hx?: () => string;
+  generate: MorphGenerate<T>;
+  props: T;
+};
+
+export type MorphTemplateAsyncGenerator<T> = (props: T) => {
+  isAsyncTemplateGenerator: true;
+  type: string;
+  hx?: () => string;
+  generate: MorphGenerate<T>;
+  props: T;
+};
+
+export type MorphComponent<T> =
+  | MorphTemplateGenerator<T>
+  | MorphTemplateAsyncGenerator<T>;
 
 export type MorphMeta = {
   isMeta: true;
@@ -40,6 +57,7 @@ export type MorphJS = {
 };
 
 export type MorphBaseProps = {
+  hx: () => string;
   child?: MorphTemplate;
 };
 
@@ -60,7 +78,7 @@ export type Layout = {
     js: string,
     meta: MetaOptions,
   ) => { text: string; meta: MetaOptions };
-  wrapper?: MorphTemplateGenerator<{ child: MorphTemplate } & MorphPageProps>;
+  wrapper?: MorphTemplateGenerator<{ child: any } & MorphPageProps>;
 };
 
 export type MetaOptions = {} & {

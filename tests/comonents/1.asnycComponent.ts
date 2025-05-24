@@ -13,10 +13,9 @@ Deno.test("1 Render asnyc component", async () => {
   );
 
   assertEquals(await renderWithEmptyRequest(cmp), {
-    html:
-      "\n        <div>\n          <p>Hello, World</p>\n        </div>\n      ",
+    html: "\n        <div>\n          <p>Hello, World</p>\n        </div>\n      ",
     css: "",
     js: "",
-    meta: {},
+    meta: {}
   });
 });
