@@ -1,14 +1,14 @@
 # Morph
 
 <p align="center">
-  <img src="./morph.png" alt="Morph mascot" width="256" />
+  <img src="./morph.png" alt="Morph mascot" width="200" />
 </p>
 
 [![JSR](https://jsr.io/badges/@vseplet/morph)](https://jsr.io/@vseplet/morph)
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/m/vseplet/morph)](https://github.com/vseplet/morph/pulse)
 [![GitHub last commit](https://img.shields.io/github/last-commit/vseplet/morph)](https://github.com/vseplet/morph/commits/main)
 
-## 👋 👋 ATTENTION!
+## 👋 ATTENTION!
 
 > This package is under development and will be frequently updated. The author
 > would appreciate any help, advice, and pull requests! Thank you for your
@@ -18,10 +18,10 @@
 
 **Morph** is an embeddable fullstack library for building
 [Hypermedia-Driven Applications](https://htmx.org/essays/hypermedia-driven-applications/)
-without a build step, based on [HTMX](https://htmx.org/).
+without a build step, based on [HTMX](https://htmx.org/) and [Hono](https://hono.dev/).
 
 - [Morph](#morph)
-  - [👋 👋 ATTENTION!](#--attention)
+  - [👋 ATTENTION!](#-attention)
     - [Core principles:](#core-principles)
   - [Get started](#get-started)
     - [Add packages](#add-packages)
@@ -35,23 +35,16 @@ without a build step, based on [HTMX](https://htmx.org/).
     - [Client-Side JavaScript](#client-side-javascript)
     - [Styles](#styles)
     - [Routing, pages and Hono](#routing-pages-and-hono)
-    - [Partial and HTMX](#partial-and-htmx)
     - [Layouts](#layouts)
     - [Meta](#meta)
+    - [Partial and HTMX](#partial-and-htmx)
+    - [RPC](#rpc)
   - [Conclusion](#conclusion)
   - [License](#license)
 
-Morph combines the best of SSR, SPA, and islands architecture, while sticking to
-plain HTML, CSS, and JS.
+Morph exists for one purpose: to simplify the creation of small, straightforward interfaces while eliminating the need to separate frontend and backend into distinct services (as commonly done with Vue/Nuxt and React/Next). It's perfect for embedding web interfaces into existing codebases, whether that's admin panels, dashboards for CLI utilities, Telegram Web Apps (and similar platforms), or small applications and pet projects.
 
-I created Morph while optimizing the development of Telegram Web Apps using Deno
-and Deno Deploy. Traditional stacks that separate frontend and backend with
-complex APIs and use React or Vue felt overly heavy, complex, and expensive for
-small projects.
-
-Currently, Morph runs on [Hono](https://hono.dev/) and
-[HTMX](https://htmx.org/), but support for other backends may be added in the
-future.
+Morph requires virtually nothing - it doesn't impose project structure, doesn't force you to "build" or compile anything. It just works here and now. Morph is ideal for solo developers who don't have the resources to develop and maintain a separate frontend, or simply don't need one. In this sense, Morph is the antithesis of modern frameworks, adapted for working with Deno, NodeJS, and Bun.
 
 ### Core principles:
 
@@ -65,11 +58,6 @@ future.
 - No build step\
 - No need to design API data structures upfront
 - The library can be embedded into any Deno/Node/Bun project
-
-Morph is ideal when there's no need to split frontend and backend into separate
-services. It works especially well for small Telegram bots, desktop apps, or
-internal tools that don't justify a full frontend stack but still need a clean
-and dynamic UI.
 
 ## Get started
 
@@ -386,6 +374,39 @@ Deno.serve(app.fetch); // for Deno
 // serve(app); // for Node.js
 ```
 
+### Layouts
+
+[Coming soon]
+
+### Meta
+
+A simple mechanism that allows you to set template values from any component. For example, to set the page title:
+
+```ts
+const cmp = component(
+  async () =>
+    html`
+      ${meta({
+        title: "Hello, World!"
+      })}
+      <div>
+        <p>Hello, World</p>
+      </div>
+    `
+);
+```
+
+You can also add content to the head or body sections:
+
+```ts
+meta({
+  head: `<link rel="stylesheet" href="styles.css">` // add CSS
+  bodyEnd: `<script>alert("Hi!")</script>`
+})
+```
+
+Additionally, it allows you to set HTTP headers, status codes, and other response metadata.
+
 ### Partial and HTMX
 
 HTMX is a powerful library that enables moving data handling and page/component updates from JavaScript to HTML, seamlessly integrating with HTML syntax. In Morph, you can re-render individual components without reloading the entire page (the component is rendered on the server).
@@ -411,13 +432,9 @@ morph
   // .fetch ...
 ```
 
-### Layouts
+### RPC
 
-[Coming soon]
-
-### Meta
-
-[Coming soon]
+(Coming soon)
 
 ## Conclusion
 
