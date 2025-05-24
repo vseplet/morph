@@ -29,9 +29,7 @@ const website = morph
       })}
 
       <p> Not redrawing ${counter}</p>
-
       ${cmp}
-
       <p> Not redrawing ${counter}</p>
     `),
   );

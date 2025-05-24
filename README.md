@@ -388,7 +388,28 @@ Deno.serve(app.fetch); // for Deno
 
 ### Partial and HTMX
 
-[Coming soon]
+HTMX is a powerful library that enables moving data handling and page/component updates from JavaScript to HTML, seamlessly integrating with HTML syntax. In Morph, you can re-render individual components without reloading the entire page (the component is rendered on the server).
+
+Here's a simple example ([full](./examples/redrawing-component.ts)):
+
+```ts
+const cmp = component(async (props) => html`
+  <div ${props.hx()} hx-swap="outerHTML" hx-trigger="every 1s">
+    ${Math.random()}
+  </div>
+`);
+```
+
+Note the `props.hx()` function - it returns a path that can be used to trigger the component's re-rendering. For more information about `hx-swap` and `hx-trigger` attributes, please refer to the [official HTMX documentation](https://htmx.org/docs/).
+
+To enable component re-rendering, you need to explicitly register it with the Hono router:
+
+```ts
+morph
+  .partial(cmp)
+  // .page()
+  // .fetch ...
+```
 
 ### Layouts
 
