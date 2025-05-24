@@ -7,6 +7,7 @@ TODO:
 - add html minify
 - fix problem with 0 in template
 - script management in partials
+-
 */
 
 import type {
