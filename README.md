@@ -55,7 +55,7 @@ Morph requires virtually nothing - it doesn't impose project structure, doesn't 
 - Components form a hierarchy, can be nested in one another, and returned from
   APIs
 - Minimal or no client-side JavaScript
-- No build step\
+- No build step
 - No need to design API data structures upfront
 - The library can be embedded into any Deno/Node/Bun project
 
