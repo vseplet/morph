@@ -35,7 +35,8 @@ without a build step, based on [HTMX](https://htmx.org/) and [Hono](https://hono
     - [Client-Side JavaScript](#client-side-javascript)
     - [Styles](#styles)
     - [Routing, pages and Hono](#routing-pages-and-hono)
-    - [Layouts](#layouts)
+    - [Layout](#layout)
+    - [Wrapper](#wrapper)
     - [Meta](#meta)
     - [Partial and HTMX](#partial-and-htmx)
     - [RPC](#rpc)
@@ -374,7 +375,11 @@ Deno.serve(app.fetch); // for Deno
 // serve(app); // for Node.js
 ```
 
-### Layouts
+### Layout
+
+[Coming soon]
+
+### Wrapper
 
 [Coming soon]
 

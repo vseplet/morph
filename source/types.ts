@@ -78,7 +78,7 @@ export type Layout = {
     js: string,
     meta: MetaOptions,
   ) => { text: string; meta: MetaOptions };
-  wrapper?: MorphTemplateGenerator<{ child: any } & MorphPageProps>;
+  wrapper?: MorphComponent<any>;
 };
 
 export type MetaOptions = {} & {

@@ -1,5 +1,5 @@
 import { Hono } from "@hono/hono";
-import { component, fn, html, meta, morph, rpc, styled } from "@vseplet/morph";
+import { basic, component, fn, html, meta, morph, rpc, styled } from "../../source/mod.ts";
 
 // deno-fmt-ignore
 export const homePage = component((props) => html`

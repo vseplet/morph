@@ -164,7 +164,7 @@ export class Morph {
     return this;
   }
 
-  page<T>(route: string, component: MorphComponent<MorphPageProps>) {
+  page<T>(route: string, component: MorphComponent<any>) {
     this.pages[route] = async (c: Context) => {
       const pageProps: MorphPageProps = {
         request: c.req.raw,
@@ -436,7 +436,7 @@ export const basic = layout<{
   htmx?: boolean;
   jsonEnc?: boolean;
   bluma?: boolean;
-  wrapper?: MorphTemplateGenerator<{ child: MorphTemplate } & MorphPageProps>;
+  wrapper?: MorphComponent<{}>;
 }>((options) => {
   return {
     wrapper: options?.wrapper,

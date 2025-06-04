@@ -1,5 +1,5 @@
 import { Hono } from "@hono/hono";
-import { component, html, meta, morph } from "@vseplet/morph";
+import { component, html, meta, morph, MorphPageProps } from "@vseplet/morph";
 
 let counter = 0;
 
@@ -19,19 +19,20 @@ const cmp = component(async (props) => html`
   </div>
 `);
 
+const page = component<MorphPageProps>(() => html`
+  ${meta({
+    title: `Redrawing Component`,
+  })}
+
+  <p> Not redrawing ${counter}</p>
+  ${cmp}
+  <p> Not redrawing ${counter}</p>
+`)
+
 const website = morph
   .partial(cmp)
   .page(
-    "/",
-    component(() => html`
-      ${meta({
-        title: `Redrawing Component`,
-      })}
-
-      <p> Not redrawing ${counter}</p>
-      ${cmp}
-      <p> Not redrawing ${counter}</p>
-    `),
+    "/", page
   );
 
 const app = new Hono()
