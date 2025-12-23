@@ -374,11 +374,16 @@ export class Morph {
 
           const template = cmp(pageProps);
           const pageObject = await render(template, pageProps);
-          return new Response(pageObject.html, {
-            headers: {
-              "Content-Type": "text/html",
+          return new Response(
+            `${pageObject.html}${
+              pageObject.css ? `<style>${pageObject.css}</style>` : ""
+            }${pageObject.js ? `<script>${pageObject.js}</script>` : ""}`,
+            {
+              headers: {
+                "Content-Type": "text/html",
+              },
             },
-          });
+          );
         });
       }
 
