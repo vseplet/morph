@@ -31,6 +31,20 @@ export * from "./types.ts";
 
 let counter = 0;
 
+/**
+ * Renders a Morph template to HTML string with collected CSS and JS.
+ * Handles nested templates, arrays, async generators, and component composition.
+ *
+ * @param template - The template to render (can be MorphTemplate, array, or generator)
+ * @param pageProps - Page props containing request information
+ * @returns Object with rendered HTML, collected CSS, JS, and meta options
+ *
+ * @example
+ * ```ts
+ * const result = await render(html`<div>Hello</div>`, pageProps);
+ * console.log(result.html); // "<div>Hello</div>"
+ * ```
+ */
 export const render = async (
   template:
     | MorphTemplate
@@ -139,6 +153,21 @@ const renderArgument = async (
   return { html: String(arg), css, js, meta };
 };
 
+/**
+ * Main Morph application class for building server-rendered web applications.
+ * Manages routes, layouts, partials, and RPC handlers.
+ *
+ * @example
+ * ```ts
+ * const app = new Morph({ layout: basic({ htmx: true }) })
+ *   .page("/", homePage)
+ *   .page("/users/:id", userPage)
+ *   .partial(counterComponent)
+ *   .build();
+ *
+ * Deno.serve(app.fetch);
+ * ```
+ */
 export class Morph {
   private morphLayout: Layout;
   private pages: Record<string, any> = {};
@@ -146,6 +175,11 @@ export class Morph {
   private partials: Record<string, MorphComponent<any>> = {};
   private honoRouter: Hono | null = null;
 
+  /**
+   * Creates a new Morph application instance.
+   *
+   * @param options - Configuration options including the layout
+   */
   constructor(
     private options: {
       layout: Layout;
@@ -154,16 +188,54 @@ export class Morph {
     this.morphLayout = options.layout;
   }
 
+  /**
+   * Sets the layout for the application.
+   *
+   * @param layout - The layout configuration
+   * @returns The Morph instance for chaining
+   */
   layout(layout: Layout) {
     this.morphLayout = layout;
     return this;
   }
 
+  /**
+   * Registers a component as a partial for HTMX updates.
+   * Creates a `/draw/{componentName}` endpoint.
+   *
+   * @param cmp - The component to register as a partial
+   * @returns The Morph instance for chaining
+   *
+   * @example
+   * ```ts
+   * const counter = component((props) => html`
+   *   <div ${props.hx()} hx-trigger="click" hx-swap="outerHTML">
+   *     Count: ${props.query?.count ?? 0}
+   *   </div>
+   * `);
+   *
+   * morph.partial(counter);
+   * ```
+   */
   partial<T>(cmp: MorphComponent<T>) {
     this.partials[cmp.name] = cmp;
     return this;
   }
 
+  /**
+   * Registers a page route with a component.
+   *
+   * @param route - The URL pattern (supports :param syntax)
+   * @param component - The component to render for this route
+   * @returns The Morph instance for chaining
+   *
+   * @example
+   * ```ts
+   * morph
+   *   .page("/", homePage)
+   *   .page("/users/:id", userPage);
+   * ```
+   */
   page<T>(route: string, component: MorphComponent<any>) {
     this.pages[route] = async (c: Context) => {
       const pageProps: MorphPageProps = {
@@ -217,11 +289,39 @@ export class Morph {
     return this;
   }
 
+  /**
+   * Registers RPC handlers for typed server calls.
+   *
+   * @param obj - Object containing handler name and functions
+   * @returns The Morph instance for chaining
+   *
+   * @example
+   * ```ts
+   * const api = rpc({
+   *   createUser: async (req, args: { name: string }) =>
+   *     html`<div>Created ${args.name}</div>`,
+   * });
+   *
+   * morph.rpc(api);
+   * ```
+   */
   rpc(obj: { name: string; handlers: RpcHandlers<any> }) {
     this.rpcHandlers[obj.name] = obj.handlers;
     return this;
   }
 
+  /**
+   * Builds and returns the Hono router with all registered routes.
+   * Call this once after registering all pages, partials, and RPC handlers.
+   *
+   * @returns The configured Hono router
+   *
+   * @example
+   * ```ts
+   * const router = morph.build();
+   * Deno.serve(router.fetch);
+   * ```
+   */
   build() {
     if (this.honoRouter == null) {
       const router = new Hono();
@@ -301,6 +401,18 @@ export class Morph {
     }
   }
 
+  /**
+   * Handles an HTTP request using the built router.
+   * Automatically builds the router if not already built.
+   *
+   * @param req - The incoming HTTP Request
+   * @returns The HTTP Response
+   *
+   * @example
+   * ```ts
+   * const response = await morph.fetch(request);
+   * ```
+   */
   async fetch(req: Request) {
     return this.honoRouter
       ? await this.honoRouter.fetch(req)
@@ -308,6 +420,29 @@ export class Morph {
   }
 }
 
+/**
+ * Tagged template literal for creating HTML templates.
+ * Supports interpolation of strings, numbers, other templates, arrays, and components.
+ *
+ * @param str - Template string parts
+ * @param args - Interpolated values
+ * @returns A MorphTemplate object
+ *
+ * @example
+ * ```ts
+ * // Basic usage
+ * html`<div>Hello, ${name}!</div>`
+ *
+ * // Nested templates
+ * html`<div>${html`<span>nested</span>`}</div>`
+ *
+ * // Arrays
+ * html`<ul>${items.map(i => html`<li>${i}</li>`)}</ul>`
+ *
+ * // Conditionals
+ * html`<div>${isAdmin ? html`<button>Delete</button>` : ""}</div>`
+ * ```
+ */
 export const html = (
   str: TemplateStringsArray,
   ...args: any[]
@@ -318,6 +453,29 @@ export const html = (
   args,
 });
 
+/**
+ * Tagged template literal for creating scoped CSS styles.
+ * Generates a unique class name and collects CSS in the document head.
+ *
+ * @param str - CSS template string parts
+ * @param args - Interpolated values
+ * @returns A MorphCSS object with unique class name
+ *
+ * @example
+ * ```ts
+ * const buttonClass = styled`
+ *   padding: 8px 16px;
+ *   background: blue;
+ *   color: white;
+ *
+ *   &:hover {
+ *     background: darkblue;
+ *   }
+ * `;
+ *
+ * html`<button class="${buttonClass}">Click me</button>`
+ * ```
+ */
 export const styled = (str: TemplateStringsArray, ...args: any[]): MorphCSS => {
   const name = "s" + crypto.randomUUID();
   return {
@@ -328,38 +486,143 @@ export const styled = (str: TemplateStringsArray, ...args: any[]): MorphCSS => {
   };
 };
 
-// TODO: добавить куки, статус код
+/**
+ * Sets page metadata including title, HTTP status, headers, and injected content.
+ *
+ * @param data - Metadata options
+ * @returns A MorphMeta object
+ *
+ * @example
+ * ```ts
+ * const page = component(() => html`
+ *   ${meta({
+ *     title: "My Page",
+ *     statusCode: 200,
+ *     headers: { "Cache-Control": "no-cache" },
+ *     head: '<link rel="icon" href="/favicon.ico">',
+ *   })}
+ *   <h1>Content</h1>
+ * `);
+ * ```
+ */
 export const meta = (data: MetaOptions): MorphMeta => ({
   isMeta: true,
   type: "meta",
   meta: data,
 });
 
+/**
+ * Tagged template literal for injecting client-side JavaScript.
+ * The code is wrapped in an IIFE and added to the end of the document body.
+ *
+ * @param str - JavaScript template string parts
+ * @param args - Interpolated values
+ * @returns A MorphJS object
+ *
+ * @example
+ * ```ts
+ * html`
+ *   <div id="app"></div>
+ *   ${js`
+ *     document.getElementById("app").textContent = "Hello from JS!";
+ *   `}
+ * `
+ * ```
+ */
 export const js = (str: TemplateStringsArray, ...args: any[]): MorphJS => ({
   isJS: true,
   type: "js",
   str: `(function() {${buildString(str, args)}})();`,
 });
 
+/**
+ * Converts a function to client-side JavaScript.
+ * The function is serialized and executed as an IIFE on the client.
+ *
+ * @param f - The function to convert
+ * @returns A MorphJS object
+ *
+ * @example
+ * ```ts
+ * html`
+ *   ${fn(() => {
+ *     console.log("Page loaded!");
+ *     document.body.style.background = "lightblue";
+ *   })}
+ * `
+ * ```
+ */
 export const fn = (f: Function): MorphJS => ({
   isJS: true,
   type: "js",
   str: `(${f.toString()})();`,
 });
 
+/**
+ * Creates an onclick attribute with inline JavaScript.
+ *
+ * @param fn - The function to execute on click
+ * @returns An onclick attribute string
+ *
+ * @example
+ * ```ts
+ * html`<button ${onclick(() => alert("Clicked!"))}>Click me</button>`
+ * ```
+ */
 export const onclick = (fn: Function) => {
   return `onclick='(${fn.toString()})()'`;
 };
 
+/**
+ * Creates an inline script tag with the given function.
+ *
+ * @param fn - The function to execute
+ * @returns A script tag string
+ *
+ * @example
+ * ```ts
+ * html`
+ *   <div>Content</div>
+ *   ${script(() => console.log("Inline script executed"))}
+ * `
+ * ```
+ */
 export const script = (fn: Function) => {
   return `<script>(${fn.toString()})()</script>`;
 };
 
+/**
+ * Creates a class attribute with scoped CSS styles.
+ * Shorthand for `class="${styled`...`}"`.
+ *
+ * @param str - CSS template string parts
+ * @param args - Interpolated values
+ * @returns A class attribute string
+ *
+ * @example
+ * ```ts
+ * html`<div ${style`padding: 16px; color: blue;`}>Styled div</div>`
+ * ```
+ */
 export const style = (str: TemplateStringsArray, ...args: any[]) => {
   const s = styled(str, ...args);
   return `class="${s.name}"`;
 };
 
+/**
+ * Default Morph instance with a basic layout including HTMX.
+ * Use for quick prototyping or simple applications.
+ *
+ * @example
+ * ```ts
+ * import { morph, component, html } from "@vseplet/morph";
+ *
+ * const page = component(() => html`<h1>Hello!</h1>`);
+ *
+ * const app = morph.page("/", page).build();
+ * Deno.serve(app.fetch);
+ * ```
+ */
 export const morph = new Morph({
   layout: {
     layout: (
@@ -392,10 +655,59 @@ export const morph = new Morph({
   },
 });
 
+/**
+ * Helper for creating custom layout configurations.
+ * Provides type inference for layout options.
+ *
+ * @param cb - Callback that receives layout options and returns a Layout
+ * @returns The callback for use with Morph
+ *
+ * @example
+ * ```ts
+ * const myLayout = layout<{ darkMode?: boolean }>((options) => ({
+ *   layout: (page, css, js, meta) => ({
+ *     text: `<html class="${options.darkMode ? 'dark' : ''}">${page}</html>`,
+ *     meta,
+ *   }),
+ * }));
+ * ```
+ */
 export const layout = <C>(cb: (layoutOptions: C & LayoutOptions) => Layout) =>
   cb;
 
-/** */
+/**
+ * Creates a reusable component with optional typed props.
+ * Components can be sync or async and receive page props automatically.
+ *
+ * @param generate - Function that generates the component's HTML template
+ * @returns A MorphComponent that can be used in pages and partials
+ *
+ * @example
+ * ```ts
+ * // Simple component
+ * const header = component(() => html`<header><h1>My App</h1></header>`);
+ *
+ * // Component with typed props
+ * const userCard = component<{ name: string; email: string }>((props) => html`
+ *   <div class="user-card">
+ *     <h3>${props.name}</h3>
+ *     <p>${props.email}</p>
+ *   </div>
+ * `);
+ *
+ * // Async component
+ * const userList = component(async (props) => {
+ *   const users = await fetchUsers();
+ *   return html`<ul>${users.map(u => userCard(u))}</ul>`;
+ * });
+ *
+ * // Using page props
+ * const page = component((props) => html`
+ *   <p>Route: ${props.route}</p>
+ *   <p>User ID: ${props.params.id}</p>
+ * `);
+ * ```
+ */
 export const component = <T = {}>(
   generate: MorphGenerate<T>,
 ): MorphComponent<T> => {
@@ -430,6 +742,27 @@ export const component = <T = {}>(
   return cmp;
 };
 
+/**
+ * Pre-configured layout with popular CSS/JS library integrations.
+ * Supports HTMX, Alpine.js, Bootstrap, Bulma, Hyperscript, and more.
+ *
+ * @example
+ * ```ts
+ * const app = new Morph({
+ *   layout: basic({
+ *     htmx: true,          // Include HTMX
+ *     alpine: true,        // Include Alpine.js
+ *     bootstrap: true,     // Include Bootstrap CSS
+ *     bootstrapIcons: true,// Include Bootstrap Icons
+ *     bluma: true,         // Include Bulma CSS
+ *     hyperscript: true,   // Include Hyperscript
+ *     jsonEnc: true,       // Include HTMX json-enc extension
+ *     title: "My App",     // Default page title
+ *     wrapper: layoutComponent, // Wrapper component
+ *   }),
+ * });
+ * ```
+ */
 // deno-fmt-ignore
 export const basic = layout<{
   hyperscript?: boolean;
@@ -509,6 +842,40 @@ export const basic = layout<{
   };
 });
 
+/**
+ * Creates typed RPC (Remote Procedure Call) handlers for server-client communication.
+ * Generates HTMX attributes for calling server functions with JSON arguments.
+ *
+ * @param handlers - Object mapping handler names to async functions
+ * @returns Object with rpc attribute generators, handlers, and unique name
+ *
+ * @example
+ * ```ts
+ * // Define RPC handlers
+ * const api = rpc({
+ *   createUser: async (req, args: { name: string; email: string }) => {
+ *     const user = await db.users.create(args);
+ *     return html`<div>Created: ${user.name}</div>`;
+ *   },
+ *   deleteUser: async (req, args: { id: number }) => {
+ *     await db.users.delete(args.id);
+ *     return html`<div>Deleted</div>`;
+ *   },
+ * });
+ *
+ * // Use in component
+ * const form = component(() => html`
+ *   <button ${api.rpc.createUser({ name: "Alice", email: "alice@example.com" })}
+ *           hx-target="#result">
+ *     Create User
+ *   </button>
+ *   <div id="result"></div>
+ * `);
+ *
+ * // Register with Morph
+ * morph.rpc(api).page("/", form);
+ * ```
+ */
 export const rpc = <A>(handlers: RpcHandlers<A>): {
   rpc: { [key in keyof A]: (args?: A[key]) => string };
   handlers: RpcHandlers<A>;
