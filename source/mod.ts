@@ -194,7 +194,7 @@ export class Morph {
    * @param layout - The layout configuration
    * @returns The Morph instance for chaining
    */
-  layout(layout: Layout) {
+  layout(layout: Layout): this {
     this.morphLayout = layout;
     return this;
   }
@@ -217,7 +217,7 @@ export class Morph {
    * morph.partial(counter);
    * ```
    */
-  partial<T>(cmp: MorphComponent<T>) {
+  partial<T>(cmp: MorphComponent<T>): this {
     this.partials[cmp.name] = cmp;
     return this;
   }
@@ -236,8 +236,9 @@ export class Morph {
    *   .page("/users/:id", userPage);
    * ```
    */
-  page<T>(route: string, component: MorphComponent<any>) {
-    this.pages[route] = async (c: Context) => {
+  // deno-lint-ignore no-explicit-any
+  page(route: string, component: MorphComponent<any>): this {
+    this.pages[route] = async (c: Context): Promise<Response> => {
       const pageProps: MorphPageProps = {
         request: c.req.raw,
         route,
@@ -305,7 +306,7 @@ export class Morph {
    * morph.rpc(api);
    * ```
    */
-  rpc(obj: { name: string; handlers: RpcHandlers<any> }) {
+  rpc(obj: { name: string; handlers: RpcHandlers<unknown> }): this {
     this.rpcHandlers[obj.name] = obj.handlers;
     return this;
   }
@@ -322,7 +323,7 @@ export class Morph {
    * Deno.serve(router.fetch);
    * ```
    */
-  build() {
+  build(): Hono {
     if (this.honoRouter == null) {
       const router = new Hono();
 
@@ -413,7 +414,7 @@ export class Morph {
    * const response = await morph.fetch(request);
    * ```
    */
-  async fetch(req: Request) {
+  async fetch(req: Request): Promise<Response> {
     return this.honoRouter
       ? await this.honoRouter.fetch(req)
       : this.build().fetch(req);
@@ -569,7 +570,7 @@ export const fn = (f: Function): MorphJS => ({
  * html`<button ${onclick(() => alert("Clicked!"))}>Click me</button>`
  * ```
  */
-export const onclick = (fn: Function) => {
+export const onclick = (fn: Function): string => {
   return `onclick='(${fn.toString()})()'`;
 };
 
@@ -587,7 +588,7 @@ export const onclick = (fn: Function) => {
  * `
  * ```
  */
-export const script = (fn: Function) => {
+export const script = (fn: Function): string => {
   return `<script>(${fn.toString()})()</script>`;
 };
 
@@ -604,7 +605,7 @@ export const script = (fn: Function) => {
  * html`<div ${style`padding: 16px; color: blue;`}>Styled div</div>`
  * ```
  */
-export const style = (str: TemplateStringsArray, ...args: any[]) => {
+export const style = (str: TemplateStringsArray, ...args: unknown[]): string => {
   const s = styled(str, ...args);
   return `class="${s.name}"`;
 };
@@ -623,7 +624,7 @@ export const style = (str: TemplateStringsArray, ...args: any[]) => {
  * Deno.serve(app.fetch);
  * ```
  */
-export const morph = new Morph({
+export const morph: Morph = new Morph({
   layout: {
     layout: (
       page: string,
@@ -672,8 +673,9 @@ export const morph = new Morph({
  * }));
  * ```
  */
-export const layout = <C>(cb: (layoutOptions: C & LayoutOptions) => Layout) =>
-  cb;
+export const layout = <C>(
+  cb: (layoutOptions: C & LayoutOptions) => Layout,
+): ((layoutOptions: C & LayoutOptions) => Layout) => cb;
 
 /**
  * Creates a reusable component with optional typed props.
@@ -763,17 +765,28 @@ export const component = <T = {}>(
  * });
  * ```
  */
-// deno-fmt-ignore
-export const basic = layout<{
+/** Options for the basic layout helper */
+export type BasicLayoutOptions = {
+  /** Include Hyperscript library */
   hyperscript?: boolean;
+  /** Include Alpine.js library */
   alpine?: boolean;
+  /** Include Bootstrap CSS */
   bootstrap?: boolean;
+  /** Include Bootstrap Icons */
   bootstrapIcons?: boolean;
+  /** Include HTMX library */
   htmx?: boolean;
+  /** Include HTMX json-enc extension */
   jsonEnc?: boolean;
+  /** Include Bulma CSS */
   bluma?: boolean;
-  wrapper?: MorphComponent<{}>;
-}>((options) => {
+  /** Wrapper component for all pages */
+  wrapper?: MorphComponent<object>;
+};
+
+// deno-fmt-ignore
+export const basic: (options: BasicLayoutOptions & LayoutOptions) => Layout = layout<BasicLayoutOptions>((options) => {
   return {
     wrapper: options?.wrapper,
     layout: (page: string, css: string, js: string, meta: Partial<LayoutOptions>) => {
