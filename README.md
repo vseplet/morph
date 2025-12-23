@@ -134,6 +134,7 @@ will fetch fresh HTML from the server every second.
   - [Partial and HTMX](#partial-and-htmx)
   - [RPC](#rpc)
 - [Examples](./examples/)
+- [AI/LLM Documentation](#aillm-documentation)
 - [Conclusion](#conclusion)
 - [License](#license)
 
@@ -681,6 +682,25 @@ The `rpc()` function returns an object with:
 
 RPC endpoints are automatically created at `/rpc/{name}/{method}` and use JSON
 encoding for arguments.
+
+## AI/LLM Documentation
+
+For AI agents and LLMs, we provide a dedicated documentation file optimized for
+machine consumption:
+
+**[AGENTS.md](./AGENTS.md)** — Structured documentation for AI assistants to
+effectively build web applications with Morph.
+
+This file contains:
+
+- Project setup and file structure patterns
+- Core API reference with typed examples
+- HTMX integration patterns
+- Testing setup and examples
+- Common patterns and troubleshooting
+
+If you're using Claude, Cursor, Copilot, or other AI coding assistants, point
+them to AGENTS.md for better results.
 
 ## Conclusion
 

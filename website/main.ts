@@ -260,6 +260,15 @@ const homePage = component(() => html`
     </section>
 
     <section class="${section}">
+      <h2 class="${sectionTitle}">AI/LLM Documentation</h2>
+      <p>
+        Using Claude, Cursor, or Copilot? We have
+        <a href="https://github.com/vseplet/morph/blob/main/AGENTS.md" style="color: #1a1a1a; font-weight: 500;">AGENTS.md</a>
+        — structured documentation for AI assistants with patterns, examples, and API reference.
+      </p>
+    </section>
+
+    <section class="${section}">
       <h2 class="${sectionTitle}">Counter</h2>
       <p class="${sectionDesc}">
         Click to increment. State is passed via query params.
