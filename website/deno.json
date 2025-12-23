@@ -1,0 +1,9 @@
+{
+  "tasks": {
+    "dev": "deno run -A --watch main.ts"
+  },
+  "imports": {
+    "@hono/hono": "jsr:@hono/hono@^4.7.10",
+    "@vseplet/morph": "jsr:@vseplet/morph@^0.4.1"
+  }
+}
