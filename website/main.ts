@@ -10,129 +10,141 @@ import {
 
 // Styles
 const container = styled`
-  max-width: 1200px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: 2rem;
-  font-family: system-ui, -apple-system, sans-serif;
+  padding: 3rem 1.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+  color: #1a1a1a;
 `;
 
 const header = styled`
-  text-align: center;
   margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e5e5e5;
 `;
 
 const title = styled`
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 1rem;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
 `;
 
 const subtitle = styled`
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   color: #666;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 `;
 
 const links = styled`
   display: flex;
-  gap: 1rem;
-  justify-content: center;
+  gap: 0.75rem;
   flex-wrap: wrap;
 `;
 
 const linkButton = styled`
   display: inline-block;
-  padding: 0.75rem 1.5rem;
-  background: #667eea;
+  padding: 0.5rem 1rem;
+  background: #1a1a1a;
   color: white;
   text-decoration: none;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: transform 0.2s, box-shadow 0.2s;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.15s;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    background: #333;
   }
 `;
 
 const section = styled`
-  margin-bottom: 3rem;
-  padding: 2rem;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2.5rem;
 `;
 
 const sectionTitle = styled`
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #1a1a1a;
+`;
+
+const sectionDesc = styled`
+  color: #666;
   margin-bottom: 1rem;
-  color: #333;
+  font-size: 0.9375rem;
 `;
 
 const demo = styled`
-  padding: 1.5rem;
-  background: #f8f9fa;
+  padding: 1.25rem;
+  background: #fafafa;
   border-radius: 8px;
-  border: 2px dashed #ddd;
+  border: 1px solid #e5e5e5;
 `;
 
 const button = styled`
-  padding: 0.75rem 1.5rem;
-  background: #667eea;
+  padding: 0.5rem 1rem;
+  background: #1a1a1a;
   color: white;
   border: none;
   border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.15s;
 
   &:hover {
-    background: #5568d3;
+    background: #333;
   }
 `;
 
 const card = styled`
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  border: 1px solid #e5e5e5;
   margin-bottom: 0.5rem;
 `;
 
 const input = styled`
   width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #ddd;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #ddd;
   border-radius: 6px;
-  font-size: 1rem;
+  font-size: 0.9375rem;
   margin-bottom: 1rem;
+  background: white;
 
   &:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #1a1a1a;
   }
 `;
 
 const counterDisplay = styled`
   font-size: 2rem;
   font-weight: 700;
-  color: #667eea;
-  margin: 1rem 0;
+  color: #1a1a1a;
+  margin-bottom: 0.75rem;
+  font-variant-numeric: tabular-nums;
 `;
 
 const toggleContent = styled`
   margin-top: 1rem;
   padding: 1rem;
-  background: #e3f2fd;
+  background: #f0f0f0;
   border-radius: 6px;
-  border-left: 4px solid #667eea;
+  font-size: 0.9375rem;
+`;
+
+const codeBlock = styled`
+  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+  font-size: 0.8125rem;
+  background: #f5f5f5;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
 `;
 
 // Interactive Components (Partials)
@@ -144,7 +156,7 @@ const counter = component((props) => {
          hx-swap="outerHTML"
          style="cursor: pointer;">
       <div class="${counterDisplay}">${count}</div>
-      <button class="${button}">Increment</button>
+      <button class="${button}">Click to increment</button>
     </div>
   `;
 });
@@ -154,7 +166,7 @@ const timer = component((props) => {
   return html`
     <div ${props.hx()} hx-trigger="every 1s" hx-swap="outerHTML">
       <div class="${counterDisplay}">${time}</div>
-      <p style="color: #666;">Updates every second</p>
+      <p style="color: #666; font-size: 0.875rem;">Auto-updates every second</p>
     </div>
   `;
 });
@@ -170,13 +182,12 @@ const toggle = component((props) => {
               hx-trigger="click"
               hx-target="closest div"
               class="${button}">
-        ${isOpen ? "Hide Content" : "Show Content"}
+        ${isOpen ? "Hide content" : "Show content"}
       </button>
       ${
     isOpen
       ? html`<div class="${toggleContent}">
-            <strong>Hidden Content Revealed!</strong><br />
-            This content is only visible when toggled on.
+            This content is rendered on the server and sent via HTMX.
             Click the button again to hide it.
           </div>`
       : ""
@@ -188,10 +199,10 @@ const toggle = component((props) => {
 const searchResults = component((props) => {
   const query = props.query?.q?.toLowerCase() ?? "";
   const items = [
-    { name: "Counter", desc: "Simple click counter with state" },
-    { name: "Timer", desc: "Real-time clock that updates every second" },
-    { name: "Toggle", desc: "Show/hide content with smooth transition" },
-    { name: "Search", desc: "Live search with instant results" },
+    { name: "Counter", desc: "Click counter with URL state" },
+    { name: "Timer", desc: "Real-time clock with polling" },
+    { name: "Toggle", desc: "Show/hide with server state" },
+    { name: "Search", desc: "Live search with debounce" },
   ];
 
   const results = query
@@ -207,8 +218,8 @@ const searchResults = component((props) => {
     results.length > 0
       ? results.map((item) => html`
           <div class="${card}">
-            <strong>${item.name}</strong><br />
-            <span style="color: #666;">${item.desc}</span>
+            <strong>${item.name}</strong>
+            <span style="color: #666;"> — ${item.desc}</span>
           </div>
         `)
       : html`<p style="color: #666;">No results found</p>`
@@ -219,37 +230,39 @@ const searchResults = component((props) => {
 
 // Main Page
 const homePage = component(() => html`
-  ${meta({ title: "Morph - Zero-build SSR with HTMX & Hono" })}
+  ${meta({ title: "Morph — SSR with HTMX & Hono" })}
 
   <div class="${container}">
     <header class="${header}">
       <h1 class="${title}">Morph</h1>
       <p class="${subtitle}">
-        Zero-build fullstack library for creating web interfaces with HTMX and Hono
+        Zero-build SSR library for TypeScript. Combines tagged template literals
+        with HTMX for partial page updates. No bundler required.
       </p>
       <div class="${links}">
         <a href="https://jsr.io/@vseplet/morph" class="${linkButton}">
-          📦 JSR Package
+          JSR Package
         </a>
         <a href="https://github.com/vseplet/morph" class="${linkButton}">
-          💻 GitHub
+          GitHub
         </a>
       </div>
     </header>
 
     <section class="${section}">
       <h2 class="${sectionTitle}">What is Morph?</h2>
-      <p style="line-height: 1.6; color: #555;">
-        Morph is a <strong>server-side rendering library</strong> that combines the simplicity
-        of tagged template literals with the power of HTMX for partial page updates.
-        No build step required - just write TypeScript and run.
+      <p>
+        Morph lets you build web apps with server-rendered components that update
+        dynamically via HTMX. Write components using the <code class="${codeBlock}">html</code>
+        template tag, style them with <code class="${codeBlock}">styled</code>,
+        and register them as partials for HTMX to fetch.
       </p>
     </section>
 
     <section class="${section}">
-      <h2 class="${sectionTitle}">🔢 Counter</h2>
-      <p style="color: #666; margin-bottom: 1rem;">
-        Click to increment. State persists in URL query params.
+      <h2 class="${sectionTitle}">Counter</h2>
+      <p class="${sectionDesc}">
+        Click to increment. State is passed via query params.
       </p>
       <div class="${demo}">
         ${counter({})}
@@ -257,9 +270,9 @@ const homePage = component(() => html`
     </section>
 
     <section class="${section}">
-      <h2 class="${sectionTitle}">⏰ Live Timer</h2>
-      <p style="color: #666; margin-bottom: 1rem;">
-        Updates automatically every second using HTMX polling.
+      <h2 class="${sectionTitle}">Live Timer</h2>
+      <p class="${sectionDesc}">
+        Updates every second using <code class="${codeBlock}">hx-trigger="every 1s"</code>.
       </p>
       <div class="${demo}">
         ${timer({})}
@@ -267,9 +280,9 @@ const homePage = component(() => html`
     </section>
 
     <section class="${section}">
-      <h2 class="${sectionTitle}">🔄 Toggle Content</h2>
-      <p style="color: #666; margin-bottom: 1rem;">
-        Show/hide content with server-side state management.
+      <h2 class="${sectionTitle}">Toggle</h2>
+      <p class="${sectionDesc}">
+        Show/hide content. State managed on the server.
       </p>
       <div class="${demo}">
         ${toggle({})}
@@ -277,15 +290,15 @@ const homePage = component(() => html`
     </section>
 
     <section class="${section}">
-      <h2 class="${sectionTitle}">🔍 Live Search</h2>
-      <p style="color: #666; margin-bottom: 1rem;">
-        Search updates as you type with 300ms debounce.
+      <h2 class="${sectionTitle}">Live Search</h2>
+      <p class="${sectionDesc}">
+        Results update as you type with 300ms debounce.
       </p>
       <div class="${demo}">
         <input
           type="text"
           name="q"
-          placeholder="Type to search..."
+          placeholder="Search..."
           class="${input}"
           hx-get="/draw/${searchResults.name}"
           hx-target="#results"
@@ -294,8 +307,8 @@ const homePage = component(() => html`
       </div>
     </section>
 
-    <footer style="text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #ddd; color: #666;">
-      <p>Built with Morph • Deployed on Deno Deploy</p>
+    <footer style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e5e5e5; color: #999; font-size: 0.875rem;">
+      Built with Morph
     </footer>
   </div>
 `);
@@ -307,15 +320,11 @@ const app = new Hono().all(
     new Morph({
       layout: basic({
         htmx: true,
-        title: "Morph - Zero-build SSR",
+        title: "Morph",
         head: `
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body {
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              min-height: 100vh;
-              padding: 2rem 0;
-            }
+            body { background: #fff; }
           </style>
         `,
       }),
