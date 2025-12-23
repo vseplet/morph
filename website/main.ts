@@ -139,7 +139,10 @@ const toggleContent = styled`
 const counter = component((props) => {
   const count = parseInt(props.query?.count ?? "0");
   return html`
-    <div ${props.hx()}?count=${count + 1} hx-trigger="click" hx-swap="outerHTML">
+    <div hx-get="/draw/${counter.name}?count=${count + 1}"
+         hx-trigger="click"
+         hx-swap="outerHTML"
+         style="cursor: pointer;">
       <div class="${counterDisplay}">${count}</div>
       <button class="${button}">Increment</button>
     </div>
@@ -162,9 +165,10 @@ const toggle = component((props) => {
 
   return html`
     <div>
-      <button ${props.hx()}?open=${nextState}
+      <button hx-get="/draw/${toggle.name}?open=${nextState}"
               hx-swap="outerHTML"
               hx-trigger="click"
+              hx-target="closest div"
               class="${button}">
         ${isOpen ? "Hide Content" : "Show Content"}
       </button>
