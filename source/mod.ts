@@ -193,7 +193,7 @@ export class Morph {
       );
 
       return new Response(
-        text/*await minify(text, {
+        text, /*await minify(text, {
           collapseWhitespace: true,
           removeComments: true,
           removeAttributeQuotes: true,
@@ -202,7 +202,7 @@ export class Morph {
           removeScriptTypeAttributes: true,
           removeStyleLinkTypeAttributes: true,
           removeTagWhitespace: true,
-        })*/,
+        })*/
         {
           headers: {
             "Content-Type": "text/html",
@@ -401,25 +401,26 @@ export const component = <T = {}>(
 ): MorphComponent<T> => {
   const name = `cmp-${counter++}`;
 
-  const cmp = (generate.constructor.name === "AsyncFunction"
-    ? function (props: T) {
-      return {
-        isAsyncTemplateGenerator: true,
-        type: "async-template-generator",
-        hx: () => `hx-get='/draw/${name}'`,
-        generate,
-        props,
-      };
-    }
-    : function (props: T) {
-      return {
-        isTemplateGenerator: true,
-        type: "template-generator",
-        hx: () => `hx-get='/draw/${name}'`,
-        generate,
-        props,
-      };
-    }) as MorphComponent<T>
+  const cmp =
+    (generate.constructor.name === "AsyncFunction"
+      ? function (props: T) {
+        return {
+          isAsyncTemplateGenerator: true,
+          type: "async-template-generator",
+          hx: () => `hx-get='/draw/${name}'`,
+          generate,
+          props,
+        };
+      }
+      : function (props: T) {
+        return {
+          isTemplateGenerator: true,
+          type: "template-generator",
+          hx: () => `hx-get='/draw/${name}'`,
+          generate,
+          props,
+        };
+      }) as MorphComponent<T>;
 
   Object.defineProperty(cmp, "name", {
     value: name,

@@ -8,18 +8,23 @@
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/m/vseplet/morph)](https://github.com/vseplet/morph/pulse)
 [![GitHub last commit](https://img.shields.io/github/last-commit/vseplet/morph)](https://github.com/vseplet/morph/commits/main)
 
-> **Note:** This package is under active development. Contributions, feedback, and pull requests are welcome!
+> **Note:** This package is under active development. Contributions, feedback,
+> and pull requests are welcome!
 
 ## What is Morph?
 
-**Morph** is a zero-build fullstack library for creating web interfaces with server-side rendering. Built on [HTMX](https://htmx.org/) and [Hono](https://hono.dev/), it works with Deno, Bun, and Node.js.
+**Morph** is a zero-build fullstack library for creating web interfaces with
+server-side rendering. Built on [HTMX](https://htmx.org/) and
+[Hono](https://hono.dev/), it works with Deno, Bun, and Node.js.
 
-**Perfect for:** Admin panels, dashboards, Telegram Web Apps, internal tools, and small projects where you don't want to maintain a separate frontend.
+**Perfect for:** Admin panels, dashboards, Telegram Web Apps, internal tools,
+and small projects where you don't want to maintain a separate frontend.
 
 ### Why Morph?
 
 - **No build step** — just write TypeScript and run
-- **Server-side rendering** — components render on the server with full access to your backend
+- **Server-side rendering** — components render on the server with full access
+  to your backend
 - **HTMX-powered** — update parts of the page without writing JavaScript
 - **Embed anywhere** — add a web UI to any existing Deno/Bun/Node project
 - **Minimal footprint** — no project structure requirements, no config files
@@ -42,24 +47,25 @@ npx jsr add @vseplet/morph && npm i hono @hono/node-server
 ### 2. Create `main.ts`
 
 ```ts
-import { Hono } from "@hono/hono";  // Bun/Node: import { Hono } from "hono";
+import { Hono } from "@hono/hono"; // Bun/Node: import { Hono } from "hono";
 import { component, html, morph } from "@vseplet/morph";
 
 // Define a page component
-const homePage = component(() => html`
-  <h1>Hello, Morph!</h1>
-  <p>This is rendered on the server.</p>
-`);
+const homePage = component(() =>
+  html`
+    <h1>Hello, Morph!</h1>
+    <p>This is rendered on the server.</p>
+  `
+);
 
 // Create the app
 const app = new Hono().all("/*", (c) =>
   morph
     .page("/", homePage)
-    .fetch(c.req.raw)
-);
+    .fetch(c.req.raw));
 
 // Start the server
-Deno.serve(app.fetch);           // Deno
+Deno.serve(app.fetch); // Deno
 // export default app;           // Bun
 // serve(app);                   // Node (import { serve } from "@hono/node-server")
 ```
@@ -79,34 +85,38 @@ Open http://localhost:8000 — done!
 Let's add a component that re-renders itself every second:
 
 ```ts
-import { component, html, morph, meta, styled } from "@vseplet/morph";
+import { component, html, meta, morph, styled } from "@vseplet/morph";
 
 // Self-updating component
-const clock = component((props) => html`
-  <div ${props.hx()} hx-trigger="every 1s" hx-swap="outerHTML">
-    <span class="${styled`font-size: 2rem; font-family: monospace;`}">
-      ${new Date().toLocaleTimeString()}
-    </span>
-  </div>
-`);
+const clock = component((props) =>
+  html`
+    <div ${props.hx()} hx-trigger="every 1s" hx-swap="outerHTML">
+      <span class="${styled`font-size: 2rem; font-family: monospace;`}">
+        ${new Date().toLocaleTimeString()}
+      </span>
+    </div>
+  `
+);
 
 // Page with the clock
-const homePage = component(() => html`
-  ${meta({ title: "Morph Clock" })}
-  <h1>Current Time</h1>
-  ${clock({})}
-`);
+const homePage = component(() =>
+  html`
+    ${meta({ title: "Morph Clock" })}
+    <h1>Current Time</h1>
+    ${clock({})}
+  `
+);
 
 // Register partial for HTMX updates, then add page
 const app = new Hono().all("/*", (c) =>
   morph
     .partial(clock)
     .page("/", homePage)
-    .fetch(c.req.raw)
-);
+    .fetch(c.req.raw));
 ```
 
-The `props.hx()` returns an `hx-get` attribute pointing to this component. HTMX will fetch fresh HTML from the server every second.
+The `props.hx()` returns an `hx-get` attribute pointing to this component. HTMX
+will fetch fresh HTML from the server every second.
 
 ---
 
@@ -336,27 +346,33 @@ Deno.serve(app.fetch); // for Deno
 
 ### Layout
 
-Layouts define how pages are wrapped in the final HTML document. A layout is responsible for adding the `<html>`, `<head>`, and `<body>` tags, as well as including necessary scripts (like HTMX) and styles.
+Layouts define how pages are wrapped in the final HTML document. A layout is
+responsible for adding the `<html>`, `<head>`, and `<body>` tags, as well as
+including necessary scripts (like HTMX) and styles.
 
 Morph provides a `basic` layout helper with common library integrations:
 
 ```ts
-import { basic, morph, component, html } from "@vseplet/morph";
+import { basic, component, html, morph } from "@vseplet/morph";
 
-const page = component(() => html`<h1>Hello!</h1>`);
+const page = component(() =>
+  html`
+    <h1>Hello!</h1>
+  `
+);
 
 const website = morph
   .layout(basic({
-    htmx: true,           // Include HTMX
-    alpine: true,         // Include Alpine.js
-    bootstrap: true,      // Include Bootstrap CSS
+    htmx: true, // Include HTMX
+    alpine: true, // Include Alpine.js
+    bootstrap: true, // Include Bootstrap CSS
     bootstrapIcons: true, // Include Bootstrap Icons
-    hyperscript: true,    // Include Hyperscript
-    jsonEnc: true,        // Include HTMX JSON encoding extension
-    bluma: true,          // Include Bulma CSS
-    title: "My App",      // Default page title
+    hyperscript: true, // Include Hyperscript
+    jsonEnc: true, // Include HTMX JSON encoding extension
+    bluma: true, // Include Bulma CSS
+    title: "My App", // Default page title
     head: `<link rel="icon" href="/favicon.ico">`, // Extra head content
-    bodyStart: `<nav>...</nav>`,  // Content at body start
+    bodyStart: `<nav>...</nav>`, // Content at body start
     bodyEnd: `<footer>...</footer>`, // Content at body end
   }))
   .page("/", page);
@@ -390,24 +406,27 @@ const customLayout = layout<{ customOption?: boolean }>((options) => ({
 
 ### Wrapper
 
-Wrappers allow you to wrap all page components with a common layout component. This is useful for adding navigation, sidebars, or other persistent UI elements.
+Wrappers allow you to wrap all page components with a common layout component.
+This is useful for adding navigation, sidebars, or other persistent UI elements.
 
 ```ts
-import { basic, morph, component, html } from "@vseplet/morph";
+import { basic, component, html, morph } from "@vseplet/morph";
 
 // Create a wrapper component that receives child content
-const appWrapper = component<{ child: MorphTemplate }>((props) => html`
-  <div class="app-container">
-    <nav>
-      <a href="/">Home</a>
-      <a href="/about">About</a>
-    </nav>
-    <main>
-      ${props.child}
-    </main>
-    <footer>© 2024</footer>
-  </div>
-`);
+const appWrapper = component<{ child: MorphTemplate }>((props) =>
+  html`
+    <div class="app-container">
+      <nav>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+      </nav>
+      <main>
+        ${props.child}
+      </main>
+      <footer>© 2024</footer>
+    </div>
+  `
+);
 
 // Use wrapper in layout
 const website = morph
@@ -419,23 +438,25 @@ const website = morph
   .page("/about", aboutPage);
 ```
 
-The wrapper component receives a `child` prop containing the rendered page content. All pages will be wrapped with this component automatically.
+The wrapper component receives a `child` prop containing the rendered page
+content. All pages will be wrapped with this component automatically.
 
 ### Meta
 
-A simple mechanism that allows you to set template values from any component. For example, to set the page title:
+A simple mechanism that allows you to set template values from any component.
+For example, to set the page title:
 
 ```ts
 const cmp = component(
   async () =>
     html`
       ${meta({
-        title: "Hello, World!"
+        title: "Hello, World!",
       })}
       <div>
         <p>Hello, World</p>
       </div>
-    `
+    `,
 );
 ```
 
@@ -448,23 +469,30 @@ meta({
 })
 ```
 
-Additionally, it allows you to set HTTP headers, status codes, and other response metadata.
+Additionally, it allows you to set HTTP headers, status codes, and other
+response metadata.
 
 ### Partial and HTMX
 
-HTMX is a powerful library that enables moving data handling and page/component updates from JavaScript to HTML, seamlessly integrating with HTML syntax. In Morph, you can re-render individual components without reloading the entire page (the component is rendered on the server).
+HTMX is a powerful library that enables moving data handling and page/component
+updates from JavaScript to HTML, seamlessly integrating with HTML syntax. In
+Morph, you can re-render individual components without reloading the entire page
+(the component is rendered on the server).
 
 #### Basic Example: Auto-refreshing Component
 
 ```ts
-const randomNumber = component((props) => html`
-  <div ${props.hx()} hx-swap="outerHTML" hx-trigger="every 1s">
-    Random: ${Math.random()}
-  </div>
-`);
+const randomNumber = component((props) =>
+  html`
+    <div ${props.hx()} hx-swap="outerHTML" hx-trigger="every 1s">
+      Random: ${Math.random()}
+    </div>
+  `
+);
 ```
 
-The `props.hx()` function returns `hx-get='/draw/{componentName}'` attribute that tells HTMX where to fetch the updated component.
+The `props.hx()` function returns `hx-get='/draw/{componentName}'` attribute
+that tells HTMX where to fetch the updated component.
 
 #### Registering Partials
 
@@ -476,7 +504,8 @@ const website = morph
   .page("/", homePage);
 ```
 
-This creates a route at `/draw/{componentName}` that returns the rendered component HTML.
+This creates a route at `/draw/{componentName}` that returns the rendered
+component HTML.
 
 #### Example: Click to Refresh
 
@@ -484,9 +513,8 @@ This creates a route at `/draw/{componentName}` that returns the rendered compon
 const counter = component((props) => {
   const count = parseInt(props.query?.count ?? "0");
   return html`
-    <div ${props.hx()}?count=${count + 1}
-         hx-swap="outerHTML"
-         hx-trigger="click">
+    <div ${props.hx()}?count="${count +
+      1}" hx-swap="outerHTML" hx-trigger="click">
       <button>Clicked ${count} times (click to increment)</button>
     </div>
   `;
@@ -499,7 +527,9 @@ const counter = component((props) => {
 const userCard = component(async (props) => {
   const userId = props.query?.id;
   if (!userId) {
-    return html`<div>No user selected</div>`;
+    return html`
+      <div>No user selected</div>
+    `;
   }
   const user = await fetchUser(userId);
   return html`
@@ -510,21 +540,27 @@ const userCard = component(async (props) => {
   `;
 });
 
-const page = component(() => html`
-  <div>
-    <button hx-get="/draw/${userCard.name}?id=1"
-            hx-target="#user-container"
-            hx-swap="innerHTML">
-      Load User 1
-    </button>
-    <button hx-get="/draw/${userCard.name}?id=2"
-            hx-target="#user-container"
-            hx-swap="innerHTML">
-      Load User 2
-    </button>
-    <div id="user-container">Select a user</div>
-  </div>
-`);
+const page = component(() =>
+  html`
+    <div>
+      <button
+        hx-get="/draw/${userCard.name}?id=1"
+        hx-target="#user-container"
+        hx-swap="innerHTML"
+      >
+        Load User 1
+      </button>
+      <button
+        hx-get="/draw/${userCard.name}?id=2"
+        hx-target="#user-container"
+        hx-swap="innerHTML"
+      >
+        Load User 2
+      </button>
+      <div id="user-container">Select a user</div>
+    </div>
+  `
+);
 
 morph
   .partial(userCard)
@@ -537,50 +573,63 @@ morph
 const searchResults = component(async (props) => {
   const query = props.query?.q ?? "";
   if (!query) {
-    return html`<p>Enter a search term</p>`;
+    return html`
+      <p>Enter a search term</p>
+    `;
   }
   const results = await search(query);
   return html`
     <ul>
-      ${results.map(item => html`<li>${item.title}</li>`)}
+      ${results.map((item) =>
+        html`
+          <li>${item.title}</li>
+        `
+      )}
     </ul>
   `;
 });
 
-const searchPage = component(() => html`
-  <div>
-    <input type="text"
-           name="q"
-           placeholder="Search..."
-           hx-get="/draw/${searchResults.name}"
-           hx-target="#results"
-           hx-trigger="keyup changed delay:300ms">
-    <div id="results">
-      ${searchResults({})}
+const searchPage = component(() =>
+  html`
+    <div>
+      <input
+        type="text"
+        name="q"
+        placeholder="Search..."
+        hx-get="/draw/${searchResults.name}"
+        hx-target="#results"
+        hx-trigger="keyup changed delay:300ms"
+      >
+      <div id="results">
+        ${searchResults({})}
+      </div>
     </div>
-  </div>
-`);
+  `
+);
 ```
 
 #### Common HTMX Attributes
 
-| Attribute | Description | Example |
-|-----------|-------------|---------|
-| `hx-get` | GET request URL | `${props.hx()}` or `hx-get="/draw/cmp"` |
-| `hx-post` | POST request URL | `hx-post="/api/submit"` |
-| `hx-trigger` | Event that triggers request | `click`, `every 1s`, `keyup changed delay:300ms` |
-| `hx-target` | Element to update | `#result`, `this`, `closest div` |
-| `hx-swap` | How to swap content | `outerHTML`, `innerHTML`, `beforeend` |
-| `hx-indicator` | Loading indicator | `#spinner` |
+| Attribute      | Description                 | Example                                          |
+| -------------- | --------------------------- | ------------------------------------------------ |
+| `hx-get`       | GET request URL             | `${props.hx()}` or `hx-get="/draw/cmp"`          |
+| `hx-post`      | POST request URL            | `hx-post="/api/submit"`                          |
+| `hx-trigger`   | Event that triggers request | `click`, `every 1s`, `keyup changed delay:300ms` |
+| `hx-target`    | Element to update           | `#result`, `this`, `closest div`                 |
+| `hx-swap`      | How to swap content         | `outerHTML`, `innerHTML`, `beforeend`            |
+| `hx-indicator` | Loading indicator           | `#spinner`                                       |
 
-For more information about HTMX attributes, refer to the [official HTMX documentation](https://htmx.org/docs/).
+For more information about HTMX attributes, refer to the
+[official HTMX documentation](https://htmx.org/docs/).
 
 ### RPC
 
-RPC (Remote Procedure Call) provides a type-safe way to call server-side functions from HTMX attributes. This is useful when you need to pass arguments to the server.
+RPC (Remote Procedure Call) provides a type-safe way to call server-side
+functions from HTMX attributes. This is useful when you need to pass arguments
+to the server.
 
 ```ts
-import { rpc, morph, component, html, styled } from "@vseplet/morph";
+import { component, html, morph, rpc, styled } from "@vseplet/morph";
 
 // Define RPC handlers with typed arguments
 const userApi = rpc({
@@ -597,21 +646,25 @@ const userApi = rpc({
 
   updateName: async (req, args: { userId: number; name: string }) => {
     await updateUser(args.userId, { name: args.name });
-    return html`<span>Name updated to ${args.name}</span>`;
+    return html`
+      <span>Name updated to ${args.name}</span>
+    `;
   },
 });
 
 // Use RPC in components
-const page = component(() => html`
-  <div>
-    <!-- Call RPC with arguments using hx-vals -->
-    <button ${userApi.rpc.getUser({ userId: 123 })} hx-target="#result">
-      Load User
-    </button>
+const page = component(() =>
+  html`
+    <div>
+      <!-- Call RPC with arguments using hx-vals -->
+      <button ${userApi.rpc.getUser({ userId: 123 })} hx-target="#result">
+        Load User
+      </button>
 
-    <div id="result"></div>
-  </div>
-`);
+      <div id="result"></div>
+    </div>
+  `
+);
 
 // Register RPC handlers with morph
 const website = morph
@@ -620,11 +673,14 @@ const website = morph
 ```
 
 The `rpc()` function returns an object with:
-- `rpc` - Object with methods that generate HTMX attributes (`hx-ext`, `hx-post`, `hx-vals`)
+
+- `rpc` - Object with methods that generate HTMX attributes (`hx-ext`,
+  `hx-post`, `hx-vals`)
 - `handlers` - The handler functions
 - `name` - Auto-generated unique name for routing
 
-RPC endpoints are automatically created at `/rpc/{name}/{method}` and use JSON encoding for arguments.
+RPC endpoints are automatically created at `/rpc/{name}/{method}` and use JSON
+encoding for arguments.
 
 ## Conclusion
 
