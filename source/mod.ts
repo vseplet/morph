@@ -5,7 +5,6 @@ import { type Context, Hono } from "@hono/hono";
 /*
 TODO:
 - add html minify
-- fix problem with 0 in template
 - script management in partials
 - fix problem with component() return type
 */
@@ -100,7 +99,8 @@ const renderArgument = async (
   const css = "";
   const js = "";
 
-  if (!arg) return { html: "", css, js, meta };
+  if (arg === undefined || arg === null) return { html: "", css, js, meta };
+  if (arg === false) return { html: "", css, js, meta };
 
   if (arg.isMeta) return { html: "", css, js, meta: arg.meta };
   if (arg.isCSS) return { html: arg.name, css: arg.str, js, meta };
@@ -355,8 +355,10 @@ export const script = (fn: Function) => {
   return `<script>(${fn.toString()})()</script>`;
 };
 
-export const style = (str: TemplateStringsArray, ...args: any[]) =>
-  `class="${styled(str, args)}"`;
+export const style = (str: TemplateStringsArray, ...args: any[]) => {
+  const s = styled(str, ...args);
+  return `class="${s.name}"`;
+};
 
 export const morph = new Morph({
   layout: {

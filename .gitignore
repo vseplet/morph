@@ -1,5 +1,6 @@
 .vscode
 .DS_Store
+.claude
 trash
 test.ts
 shibui-project

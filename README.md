@@ -8,165 +8,124 @@
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/m/vseplet/morph)](https://github.com/vseplet/morph/pulse)
 [![GitHub last commit](https://img.shields.io/github/last-commit/vseplet/morph)](https://github.com/vseplet/morph/commits/main)
 
-## 👋 ATTENTION!
+> **Note:** This package is under active development. Contributions, feedback, and pull requests are welcome!
 
-> This package is under development and will be frequently updated. The author
-> would appreciate any help, advice, and pull requests! Thank you for your
-> understanding 😊
+## What is Morph?
+
+**Morph** is a zero-build fullstack library for creating web interfaces with server-side rendering. Built on [HTMX](https://htmx.org/) and [Hono](https://hono.dev/), it works with Deno, Bun, and Node.js.
+
+**Perfect for:** Admin panels, dashboards, Telegram Web Apps, internal tools, and small projects where you don't want to maintain a separate frontend.
+
+### Why Morph?
+
+- **No build step** — just write TypeScript and run
+- **Server-side rendering** — components render on the server with full access to your backend
+- **HTMX-powered** — update parts of the page without writing JavaScript
+- **Embed anywhere** — add a web UI to any existing Deno/Bun/Node project
+- **Minimal footprint** — no project structure requirements, no config files
+
+## Quick Start
+
+### 1. Install
+
+```bash
+# Deno
+deno add jsr:@vseplet/morph jsr:@hono/hono
+
+# Bun
+bunx jsr add @vseplet/morph && bun add hono
+
+# Node
+npx jsr add @vseplet/morph && npm i hono @hono/node-server
+```
+
+### 2. Create `main.ts`
+
+```ts
+import { Hono } from "@hono/hono";  // Bun/Node: import { Hono } from "hono";
+import { component, html, morph } from "@vseplet/morph";
+
+// Define a page component
+const homePage = component(() => html`
+  <h1>Hello, Morph!</h1>
+  <p>This is rendered on the server.</p>
+`);
+
+// Create the app
+const app = new Hono().all("/*", (c) =>
+  morph
+    .page("/", homePage)
+    .fetch(c.req.raw)
+);
+
+// Start the server
+Deno.serve(app.fetch);           // Deno
+// export default app;           // Bun
+// serve(app);                   // Node (import { serve } from "@hono/node-server")
+```
+
+### 3. Run
+
+```bash
+deno -A main.ts    # Deno
+bun main.ts        # Bun
+npx tsx main.ts    # Node
+```
+
+Open http://localhost:8000 — done!
+
+### 4. Add Interactivity
+
+Let's add a component that re-renders itself every second:
+
+```ts
+import { component, html, morph, meta, styled } from "@vseplet/morph";
+
+// Self-updating component
+const clock = component((props) => html`
+  <div ${props.hx()} hx-trigger="every 1s" hx-swap="outerHTML">
+    <span class="${styled`font-size: 2rem; font-family: monospace;`}">
+      ${new Date().toLocaleTimeString()}
+    </span>
+  </div>
+`);
+
+// Page with the clock
+const homePage = component(() => html`
+  ${meta({ title: "Morph Clock" })}
+  <h1>Current Time</h1>
+  ${clock({})}
+`);
+
+// Register partial for HTMX updates, then add page
+const app = new Hono().all("/*", (c) =>
+  morph
+    .partial(clock)
+    .page("/", homePage)
+    .fetch(c.req.raw)
+);
+```
+
+The `props.hx()` returns an `hx-get` attribute pointing to this component. HTMX will fetch fresh HTML from the server every second.
 
 ---
 
-**Morph** is an embeddable fullstack library for building
-[Hypermedia-Driven Applications](https://htmx.org/essays/hypermedia-driven-applications/)
-without a build step, based on [HTMX](https://htmx.org/) and [Hono](https://hono.dev/).
+## Table of Contents
 
-- [Morph](#morph)
-  - [👋 ATTENTION!](#-attention)
-    - [Core principles:](#core-principles)
-  - [Get started](#get-started)
-    - [Add packages](#add-packages)
-    - [Make main.ts and add imports](#make-maints-and-add-imports)
-    - [Create simple page (for all runtimes)](#create-simple-page-for-all-runtimes)
-    - [Setup server](#setup-server)
-    - [And run](#and-run)
-  - [Documentation](#documentation)
-    - [Templates](#templates)
-    - [Components](#components)
-    - [Client-Side JavaScript](#client-side-javascript)
-    - [Styles](#styles)
-    - [Routing, pages and Hono](#routing-pages-and-hono)
-    - [Layout](#layout)
-    - [Wrapper](#wrapper)
-    - [Meta](#meta)
-    - [Partial and HTMX](#partial-and-htmx)
-    - [RPC](#rpc)
-  - [Conclusion](#conclusion)
-  - [License](#license)
-
-Morph exists for one purpose: to simplify the creation of small, straightforward interfaces while eliminating the need to separate frontend and backend into distinct services (as commonly done with Vue/Nuxt and React/Next). It's perfect for embedding web interfaces into existing codebases, whether that's admin panels, dashboards for CLI utilities, Telegram Web Apps (and similar platforms), or small applications and pet projects.
-
-Morph requires virtually nothing - it doesn't impose project structure, doesn't force you to "build" or compile anything. It just works here and now. Morph is ideal for solo developers who don't have the resources to develop and maintain a separate frontend, or simply don't need one. In this sense, Morph is the antithesis of modern frameworks, adapted for working with Deno, NodeJS, and Bun.
-
-### Core principles:
-
-- Each component can call its own API that returns hypertext (other components)
-- All components are rendered on the server and have access to server-side
-  context
-- Components can be rendered and re-rendered independently
-- Components form a hierarchy, can be nested in one another, and returned from
-  APIs
-- Minimal or no client-side JavaScript
-- No build step
-- No need to design API data structures upfront
-- The library can be embedded into any Deno/Node/Bun project
-
-## Get started
-
-[(see full examples)](./examples/)
-
-### Add packages
-
-_**Deno**_\
-`deno add jsr:@vseplet/morph jsr:@hono/hono`
-
-_**Bun**_\
-`bunx jsr add @vseplet/morph`\
-`bun add hono`
-
-_**Node**_\
-`npx jsr add @vseplet/morph`\
-`npm i --save hono @hono/node-server`
-
-### Make main.ts and add imports
-
-First, import Hono based on your runtime:
-
-_**Deno**_
-
-```ts
-import { Hono } from "@hono/hono";
-```
-
-_**Bun**_
-
-```ts
-import { Hono } from "hono";
-```
-
-_**Node**_
-
-```ts
-import { serve } from "@hono/node-server";
-import { Hono } from "hono";
-```
-
-Then, add Morph imports (same for all runtimes):
-
-```ts
-import { component, fn, html, js, meta, morph, styled } from "@vseplet/morph";
-```
-
-### Create simple page (for all runtimes)
-
-```ts
-const app = new Hono()
-  .all("/*", async (c) =>
-    await morph
-      .page(
-        "/",
-        component(async () =>
-          html`
-            ${meta({ title: "Hello, World!" })}
-
-            <h1>Hello, World!</h1>
-
-            <pre class="${styled`color:red;`}">${(await (await fetch(
-              "https://icanhazdadjoke.com/",
-              {
-                headers: {
-                  Accept: "application/json",
-                  "User-Agent": "My Fun App (https://example.com)",
-                },
-              },
-            )).json()).joke}</pre>
-
-            ${fn(() => alert("Hello!"))}
-          `
-        ),
-      )
-      .fetch(c.req.raw));
-```
-
-### Setup server
-
-_**Deno**_
-
-```ts
-Deno.serve(app.fetch);
-```
-
-_**Bun**_
-
-```ts
-export default app;
-```
-
-_**Node**_
-
-```ts
-serve(app);
-```
-
-### And run
-
-_**Deno**_\
-`deno -A main.ts`
-
-_**Bun**_\
-`bun main.ts`
-
-_**Node**_\
-`node --experimental-strip-types main.ts`
+- [Documentation](#documentation)
+  - [Templates](#templates)
+  - [Components](#components)
+  - [Client-Side JavaScript](#client-side-javascript)
+  - [Styles](#styles)
+  - [Routing, Pages and Hono](#routing-pages-and-hono)
+  - [Layout](#layout)
+  - [Wrapper](#wrapper)
+  - [Meta](#meta)
+  - [Partial and HTMX](#partial-and-htmx)
+  - [RPC](#rpc)
+- [Examples](./examples/)
+- [Conclusion](#conclusion)
+- [License](#license)
 
 ## Documentation
 
@@ -377,11 +336,90 @@ Deno.serve(app.fetch); // for Deno
 
 ### Layout
 
-[Coming soon]
+Layouts define how pages are wrapped in the final HTML document. A layout is responsible for adding the `<html>`, `<head>`, and `<body>` tags, as well as including necessary scripts (like HTMX) and styles.
+
+Morph provides a `basic` layout helper with common library integrations:
+
+```ts
+import { basic, morph, component, html } from "@vseplet/morph";
+
+const page = component(() => html`<h1>Hello!</h1>`);
+
+const website = morph
+  .layout(basic({
+    htmx: true,           // Include HTMX
+    alpine: true,         // Include Alpine.js
+    bootstrap: true,      // Include Bootstrap CSS
+    bootstrapIcons: true, // Include Bootstrap Icons
+    hyperscript: true,    // Include Hyperscript
+    jsonEnc: true,        // Include HTMX JSON encoding extension
+    bluma: true,          // Include Bulma CSS
+    title: "My App",      // Default page title
+    head: `<link rel="icon" href="/favicon.ico">`, // Extra head content
+    bodyStart: `<nav>...</nav>`,  // Content at body start
+    bodyEnd: `<footer>...</footer>`, // Content at body end
+  }))
+  .page("/", page);
+```
+
+You can also create custom layouts using the `layout` helper:
+
+```ts
+import { layout, type LayoutOptions } from "@vseplet/morph";
+
+const customLayout = layout<{ customOption?: boolean }>((options) => ({
+  layout: (page, css, js, meta) => ({
+    text: `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <title>${meta.title || "Default"}</title>
+          <style>${css}</style>
+        </head>
+        <body>
+          ${page}
+          <script>${js}</script>
+        </body>
+      </html>
+    `,
+    meta,
+  }),
+}));
+```
 
 ### Wrapper
 
-[Coming soon]
+Wrappers allow you to wrap all page components with a common layout component. This is useful for adding navigation, sidebars, or other persistent UI elements.
+
+```ts
+import { basic, morph, component, html } from "@vseplet/morph";
+
+// Create a wrapper component that receives child content
+const appWrapper = component<{ child: MorphTemplate }>((props) => html`
+  <div class="app-container">
+    <nav>
+      <a href="/">Home</a>
+      <a href="/about">About</a>
+    </nav>
+    <main>
+      ${props.child}
+    </main>
+    <footer>© 2024</footer>
+  </div>
+`);
+
+// Use wrapper in layout
+const website = morph
+  .layout(basic({
+    htmx: true,
+    wrapper: appWrapper,
+  }))
+  .page("/", homePage)
+  .page("/about", aboutPage);
+```
+
+The wrapper component receives a `child` prop containing the rendered page content. All pages will be wrapped with this component automatically.
 
 ### Meta
 
@@ -416,30 +454,177 @@ Additionally, it allows you to set HTTP headers, status codes, and other respons
 
 HTMX is a powerful library that enables moving data handling and page/component updates from JavaScript to HTML, seamlessly integrating with HTML syntax. In Morph, you can re-render individual components without reloading the entire page (the component is rendered on the server).
 
-Here's a simple example ([full](./examples/redrawing-component.ts)):
+#### Basic Example: Auto-refreshing Component
 
 ```ts
-const cmp = component(async (props) => html`
+const randomNumber = component((props) => html`
   <div ${props.hx()} hx-swap="outerHTML" hx-trigger="every 1s">
-    ${Math.random()}
+    Random: ${Math.random()}
   </div>
 `);
 ```
 
-Note the `props.hx()` function - it returns a path that can be used to trigger the component's re-rendering. For more information about `hx-swap` and `hx-trigger` attributes, please refer to the [official HTMX documentation](https://htmx.org/docs/).
+The `props.hx()` function returns `hx-get='/draw/{componentName}'` attribute that tells HTMX where to fetch the updated component.
 
-To enable component re-rendering, you need to explicitly register it with the Hono router:
+#### Registering Partials
+
+To enable component re-rendering, register it with `.partial()`:
 
 ```ts
-morph
-  .partial(cmp)
-  // .page()
-  // .fetch ...
+const website = morph
+  .partial(randomNumber)
+  .page("/", homePage);
 ```
+
+This creates a route at `/draw/{componentName}` that returns the rendered component HTML.
+
+#### Example: Click to Refresh
+
+```ts
+const counter = component((props) => {
+  const count = parseInt(props.query?.count ?? "0");
+  return html`
+    <div ${props.hx()}?count=${count + 1}
+         hx-swap="outerHTML"
+         hx-trigger="click">
+      <button>Clicked ${count} times (click to increment)</button>
+    </div>
+  `;
+});
+```
+
+#### Example: Load Content on Demand
+
+```ts
+const userCard = component(async (props) => {
+  const userId = props.query?.id;
+  if (!userId) {
+    return html`<div>No user selected</div>`;
+  }
+  const user = await fetchUser(userId);
+  return html`
+    <div class="${styled`padding: 16px; border: 1px solid #ccc;`}">
+      <h3>${user.name}</h3>
+      <p>${user.email}</p>
+    </div>
+  `;
+});
+
+const page = component(() => html`
+  <div>
+    <button hx-get="/draw/${userCard.name}?id=1"
+            hx-target="#user-container"
+            hx-swap="innerHTML">
+      Load User 1
+    </button>
+    <button hx-get="/draw/${userCard.name}?id=2"
+            hx-target="#user-container"
+            hx-swap="innerHTML">
+      Load User 2
+    </button>
+    <div id="user-container">Select a user</div>
+  </div>
+`);
+
+morph
+  .partial(userCard)
+  .page("/", page);
+```
+
+#### Example: Form Submission
+
+```ts
+const searchResults = component(async (props) => {
+  const query = props.query?.q ?? "";
+  if (!query) {
+    return html`<p>Enter a search term</p>`;
+  }
+  const results = await search(query);
+  return html`
+    <ul>
+      ${results.map(item => html`<li>${item.title}</li>`)}
+    </ul>
+  `;
+});
+
+const searchPage = component(() => html`
+  <div>
+    <input type="text"
+           name="q"
+           placeholder="Search..."
+           hx-get="/draw/${searchResults.name}"
+           hx-target="#results"
+           hx-trigger="keyup changed delay:300ms">
+    <div id="results">
+      ${searchResults({})}
+    </div>
+  </div>
+`);
+```
+
+#### Common HTMX Attributes
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `hx-get` | GET request URL | `${props.hx()}` or `hx-get="/draw/cmp"` |
+| `hx-post` | POST request URL | `hx-post="/api/submit"` |
+| `hx-trigger` | Event that triggers request | `click`, `every 1s`, `keyup changed delay:300ms` |
+| `hx-target` | Element to update | `#result`, `this`, `closest div` |
+| `hx-swap` | How to swap content | `outerHTML`, `innerHTML`, `beforeend` |
+| `hx-indicator` | Loading indicator | `#spinner` |
+
+For more information about HTMX attributes, refer to the [official HTMX documentation](https://htmx.org/docs/).
 
 ### RPC
 
-(Coming soon)
+RPC (Remote Procedure Call) provides a type-safe way to call server-side functions from HTMX attributes. This is useful when you need to pass arguments to the server.
+
+```ts
+import { rpc, morph, component, html, styled } from "@vseplet/morph";
+
+// Define RPC handlers with typed arguments
+const userApi = rpc({
+  // Handler receives request context and typed arguments
+  getUser: async (req, args: { userId: number }) => {
+    const user = await fetchUser(args.userId);
+    return html`
+      <div class="${styled`border: 1px solid #ccc; padding: 10px;`}">
+        <h3>${user.name}</h3>
+        <p>${user.email}</p>
+      </div>
+    `;
+  },
+
+  updateName: async (req, args: { userId: number; name: string }) => {
+    await updateUser(args.userId, { name: args.name });
+    return html`<span>Name updated to ${args.name}</span>`;
+  },
+});
+
+// Use RPC in components
+const page = component(() => html`
+  <div>
+    <!-- Call RPC with arguments using hx-vals -->
+    <button ${userApi.rpc.getUser({ userId: 123 })} hx-target="#result">
+      Load User
+    </button>
+
+    <div id="result"></div>
+  </div>
+`);
+
+// Register RPC handlers with morph
+const website = morph
+  .rpc(userApi)
+  .page("/", page);
+```
+
+The `rpc()` function returns an object with:
+- `rpc` - Object with methods that generate HTMX attributes (`hx-ext`, `hx-post`, `hx-vals`)
+- `handlers` - The handler functions
+- `name` - Auto-generated unique name for routing
+
+RPC endpoints are automatically created at `/rpc/{name}/{method}` and use JSON encoding for arguments.
 
 ## Conclusion
 

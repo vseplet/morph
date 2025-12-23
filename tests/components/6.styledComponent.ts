@@ -2,12 +2,12 @@ import { assertEquals } from "@std/assert";
 import { component, html, styled } from "@vseplet/morph";
 import { renderWithEmptyRequest } from "$/tests/helpers";
 
-Deno.test("0 Render styled component", async () => {
+Deno.test("6 Render styled component", async () => {
   const color = "#0056b3";
 
   const buttonStyle = styled`
     border-radius: 15px;
-    border: 1px solid back;
+    border: 1px solid black;
     cursor: pointer;
     font-size: 16px;
 
@@ -34,7 +34,7 @@ Deno.test("0 Render styled component", async () => {
       "    ",
     css: `.${buttonStyle.name}{\n` +
       "    border-radius: 15px;\n" +
-      "    border: 1px solid back;\n" +
+      "    border: 1px solid black;\n" +
       "    cursor: pointer;\n" +
       "    font-size: 16px;\n" +
       "\n" +
