@@ -32,6 +32,12 @@
     "exclude": [
       "./versions.ts",
       "./deno.json",
+      "./tests/**",
+      "./.github/**"
+    ]
+  },
+  "lint": {
+    "exclude": [
       "./tests/**"
     ]
   },
