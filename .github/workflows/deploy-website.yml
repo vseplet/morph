@@ -30,6 +30,6 @@ jobs:
       - name: Deploy to Deno Deploy
         uses: denoland/deployctl@v1
         with:
-          project: morph-website
+          project: morph
           entrypoint: website/main.ts
           root: .
