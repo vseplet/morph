@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.14.1",
-    "@vseplet/morph": "npm:@jsr/vseplet__morph@^0.1.5",
+    "@vseplet/morph": "npm:@jsr/vseplet__morph@^0.4.1",
     "hono": "^4.7.9"
   }
 }

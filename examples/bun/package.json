@@ -13,7 +13,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@vseplet/morph": "npm:@jsr/vseplet__morph",
+    "@vseplet/morph": "npm:@jsr/vseplet__morph@^0.4.1",
     "hono": "^4.7.9"
   }
 }
