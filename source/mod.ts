@@ -1,13 +1,5 @@
 // deno-lint-ignore-file
 import { type Context, Hono } from "@hono/hono";
-// import { minify } from "html-minifier";
-
-/*
-TODO:
-- add html minify
-- script management in partials
-- fix problem with component() return type
-*/
 
 import type {
   Layout,
