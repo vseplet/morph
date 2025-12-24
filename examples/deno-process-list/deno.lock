@@ -1,0 +1,28 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@hono/hono@4.6.15": "4.6.15",
+    "jsr:@hono/hono@^4.7.10": "4.11.1",
+    "jsr:@vseplet/morph@^1.0.1": "1.0.1"
+  },
+  "jsr": {
+    "@hono/hono@4.6.15": {
+      "integrity": "935b3b12e98e4b22bcd1aa4dbe6587321e431c79829eba61f535b4ede39fd8b1"
+    },
+    "@hono/hono@4.11.1": {
+      "integrity": "28bb28c7322a1379e7132af05ef76aef09f86bb8cdd7077c67e004dea288ac0d"
+    },
+    "@vseplet/morph@1.0.1": {
+      "integrity": "5a20eac52a20867456ff7c9d2712d7a3201cab7bb00490be5162af84cbd0590b",
+      "dependencies": [
+        "jsr:@hono/hono@4.6.15"
+      ]
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@hono/hono@^4.7.10",
+      "jsr:@vseplet/morph@^1.0.1"
+    ]
+  }
+}
