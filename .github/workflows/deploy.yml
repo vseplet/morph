@@ -1,33 +1,31 @@
-name: Deploy Module
+name: Deploy
+
 on:
   push:
     branches: [main]
     paths:
-      - source/**
-  pull_request:
-    branches: [main]
-    paths:
-      - source/**
+      - "source/**"
+  workflow_dispatch:
 
 jobs:
   release:
+    name: Release
     runs-on: ubuntu-latest
 
     permissions:
       contents: write
-      pages: write
       id-token: write
 
     steps:
-      - name: Clone repository
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Install Deno
-        uses: denoland/setup-deno@v1
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
         with:
-          deno-version: v1.x
+          deno-version: v2.x
 
-      - name: Update version
+      - name: Update version and deploy
         env:
           GITHUB_TOKEN: ${{ secrets.SHIBUI_GITHUB_TOKEN }}
         run: |
