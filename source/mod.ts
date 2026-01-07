@@ -602,7 +602,10 @@ export const script = (fn: Function): string => {
  * html`<div ${style`padding: 16px; color: blue;`}>Styled div</div>`
  * ```
  */
-export const style = (str: TemplateStringsArray, ...args: unknown[]): string => {
+export const style = (
+  str: TemplateStringsArray,
+  ...args: unknown[]
+): string => {
   const s = styled(str, ...args);
   return `class="${s.name}"`;
 };
@@ -636,8 +639,8 @@ export const morph: Morph = new Morph({
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <title>${meta.title || "Morph Default"}</title>
             ${meta.head || ""}
-            <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-            <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/json-enc.js"></script>
+            <script src="https://unpkg.com/htmx.org@2.0.8"></script>
+            <script src="https://unpkg.com/htmx-ext-json-enc@2.0.1/json-enc.js"></script>
             <style>${css}</style>
           </head>
           <body>
@@ -672,7 +675,7 @@ export const morph: Morph = new Morph({
  */
 export const layout = <C>(
   cb: (layoutOptions: C & LayoutOptions) => Layout,
-): ((layoutOptions: C & LayoutOptions) => Layout) => cb;
+): (layoutOptions: C & LayoutOptions) => Layout => cb;
 
 /**
  * Creates a reusable component with optional typed props.
@@ -756,6 +759,7 @@ export const component = <T = {}>(
  *     bluma: true,         // Include Bulma CSS
  *     hyperscript: true,   // Include Hyperscript
  *     jsonEnc: true,       // Include HTMX json-enc extension
+ *     sse: true,           // Include HTMX SSE extension for Server-Sent Events
  *     title: "My App",     // Default page title
  *     wrapper: layoutComponent, // Wrapper component
  *   }),
@@ -776,6 +780,8 @@ export type BasicLayoutOptions = {
   htmx?: boolean;
   /** Include HTMX json-enc extension */
   jsonEnc?: boolean;
+  /** Include HTMX SSE (Server-Sent Events) extension */
+  sse?: boolean;
   /** Include Bulma CSS */
   bluma?: boolean;
   /** Wrapper component for all pages */
@@ -795,7 +801,7 @@ export const basic: (options: BasicLayoutOptions & LayoutOptions) => Layout = la
               <meta name="viewport" content="width=device-width, initial-scale=1.0" />
               ${
                 options.htmx
-                  ? `<script src="https://unpkg.com/htmx.org@2.0.4"></script>`
+                  ? `<script src="https://unpkg.com/htmx.org@2.0.8"></script>`
                   : ""
               }
               ${
@@ -816,7 +822,12 @@ export const basic: (options: BasicLayoutOptions & LayoutOptions) => Layout = la
               }
               ${
                 options.jsonEnc
-                  ? `<script src="https://unpkg.com/htmx-ext-json-enc@2.0.4/json-enc.js"></script>`
+                  ? `<script src="https://unpkg.com/htmx-ext-json-enc@2.0.1/json-enc.js"></script>`
+                  : ""
+              }
+              ${
+                options.sse
+                  ? `<script src="https://unpkg.com/htmx-ext-sse@2.2.4/sse.js"></script>`
                   : ""
               }
               ${

@@ -133,6 +133,7 @@ will fetch fresh HTML from the server every second.
   - [Meta](#meta)
   - [Partial and HTMX](#partial-and-htmx)
   - [RPC](#rpc)
+  - [Server-Sent Events (SSE)](#server-sent-events-sse)
 - [Examples](./examples/)
 - [AI/LLM Documentation](#aillm-documentation)
 - [Conclusion](#conclusion)
@@ -370,6 +371,7 @@ const website = morph
     bootstrapIcons: true, // Include Bootstrap Icons
     hyperscript: true, // Include Hyperscript
     jsonEnc: true, // Include HTMX JSON encoding extension
+    sse: true, // Include HTMX SSE extension for Server-Sent Events
     bluma: true, // Include Bulma CSS
     title: "My App", // Default page title
     head: `<link rel="icon" href="/favicon.ico">`, // Extra head content
@@ -682,6 +684,180 @@ The `rpc()` function returns an object with:
 
 RPC endpoints are automatically created at `/rpc/{name}/{method}` and use JSON
 encoding for arguments.
+
+### Server-Sent Events (SSE)
+
+Server-Sent Events (SSE) enables real-time server-to-client updates over HTTP.
+Unlike WebSockets, SSE is **unidirectional** (server → client only) and works
+over regular HTTP connections, making it perfect for live dashboards,
+notifications, and real-time feeds.
+
+#### Enabling SSE
+
+Include the SSE extension in your layout:
+
+```ts
+import { basic, Morph } from "@vseplet/morph";
+
+const app = new Morph({
+  layout: basic({
+    htmx: true,
+    sse: true, // Enable SSE extension
+  }),
+});
+```
+
+#### Creating SSE Components
+
+Use HTMX SSE attributes to connect to server events:
+
+```ts
+import { component, html } from "@vseplet/morph";
+
+const liveUpdates = component(() =>
+  html`
+    <div
+      hx-ext="sse"
+      sse-connect="/events/time"
+      sse-swap="time-update"
+    >
+      Connecting to server...
+    </div>
+  `
+);
+```
+
+**SSE Attributes:**
+
+| Attribute      | Description                          | Example             |
+| -------------- | ------------------------------------ | ------------------- |
+| `hx-ext="sse"` | Enable SSE extension                 | Required            |
+| `sse-connect`  | SSE endpoint URL                     | `/events/updates`   |
+| `sse-swap`     | Event name to listen for and swap on | `message`, `update` |
+
+#### Creating SSE Endpoints with Hono
+
+Use Hono's `streamSSE` helper to create SSE endpoints:
+
+```ts
+import { Hono } from "@hono/hono";
+import { streamSSE } from "@hono/hono/streaming";
+
+const app = new Hono();
+
+app.get("/events/time", async (c) => {
+  return streamSSE(c, async (stream) => {
+    let id = 0;
+    while (true) {
+      await stream.writeSSE({
+        data: new Date().toLocaleTimeString(),
+        event: "time-update", // Event name
+        id: String(id++), // Event ID for recovery
+      });
+      await stream.sleep(1000); // Wait 1 second
+    }
+  });
+});
+
+// Mount Morph app for other routes
+app.all("/*", (c) => morphApp.fetch(c.req.raw));
+```
+
+#### Multiple Events on One Connection
+
+Listen for multiple event types from a single SSE connection:
+
+```ts
+const multiEventComponent = component(() =>
+  html`
+    <div hx-ext="sse" sse-connect="/events/multi">
+      <div sse-swap="event-a">Event A: waiting...</div>
+      <div sse-swap="event-b">Event B: waiting...</div>
+      <div sse-swap="event-c">Event C: waiting...</div>
+    </div>
+  `
+);
+```
+
+#### Complete Example
+
+Here's a complete working example with live time updates:
+
+```ts
+import { Hono } from "@hono/hono";
+import { streamSSE } from "@hono/hono/streaming";
+import { basic, component, html, Morph } from "@vseplet/morph";
+
+// SSE component
+const clock = component(() =>
+  html`
+    <div hx-ext="sse" sse-connect="/events/clock" sse-swap="tick">
+      Loading time...
+    </div>
+  `
+);
+
+// Page
+const page = component(() =>
+  html`
+    <h1>Live Clock</h1> ${clock({})}
+  `
+);
+
+// Morph app
+const morphApp = new Morph({ layout: basic({ htmx: true, sse: true }) })
+  .page("/", page)
+  .build();
+
+// Hono app with SSE endpoint
+const app = new Hono();
+
+app.get("/events/clock", async (c) => {
+  return streamSSE(c, async (stream) => {
+    let id = 0;
+    while (true) {
+      await stream.writeSSE({
+        data: new Date().toLocaleTimeString(),
+        event: "tick",
+        id: String(id++),
+      });
+      await stream.sleep(1000);
+    }
+  });
+});
+
+app.all("/*", (c) => morphApp.fetch(c.req.raw));
+
+Deno.serve(app.fetch);
+```
+
+#### Use Cases
+
+SSE is perfect for:
+
+- **Live Dashboards** — Real-time metrics and analytics
+- **Notifications** — Push notifications to users
+- **Progress Tracking** — File uploads, background jobs
+- **News Feeds** — Live content updates
+- **Live Scores** — Sports scores, leaderboards
+- **Status Indicators** — Online/offline, typing indicators
+
+**When to use SSE vs WebSockets:**
+
+- Use **SSE** when you only need server → client updates (most real-time UIs)
+- Use **WebSockets** when you need bidirectional communication (chat, gaming)
+
+#### Running the Example
+
+See the complete working example:
+
+```bash
+deno run -A examples/sse-example.ts
+```
+
+For more details, see the
+[official HTMX SSE extension](https://htmx.org/extensions/sse/) and
+[Hono streaming helper](https://hono.dev/docs/helpers/streaming) documentation.
 
 ## AI/LLM Documentation
 
