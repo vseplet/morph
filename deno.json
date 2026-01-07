@@ -1,7 +1,7 @@
 {
   "lock": false,
   "name": "@vseplet/morph",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "license": "MIT",
   "workflows": {
     "UpdateSemverDeployJsr": {
